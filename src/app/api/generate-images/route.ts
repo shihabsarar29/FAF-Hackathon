@@ -44,7 +44,7 @@ async function generateImageWithGemini(prompt: string): Promise<{ success: boole
       throw new Error('Google Generative AI API key not configured');
     }
 
-    const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-preview-06-06:predict';
+    const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict';
     
     const requestBody = {
       instances: [

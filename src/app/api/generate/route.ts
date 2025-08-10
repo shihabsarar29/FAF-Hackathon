@@ -121,10 +121,7 @@ Include both POSITIVE and NEGATIVE environmental impacts. Focus on the most sign
 Return ONLY a JSON object for ${productName} following this structure:
 ${exampleStructure}
 
-Each videoScript should be written in SIMPLE, PLAIN ENGLISH (10-15 words) like you're telling a story to a friend. Use everyday words and add conjunctions like "first", "then", "however", "meanwhile", "finally" to make it feel like a narrative flow.
-
-For positive effects, use "however", "meanwhile", "also" to show contrast with negative impacts.
-For negative effects, use "first", "then", "next", "finally" to show progression of environmental damage.`;
+Each videoScript should be written in SIMPLE, PLAIN ENGLISH (10-15 words) like you're telling a story to a friend. Use everyday words and add conjunctions like "first", "then", "however", "meanwhile", "finally" to make it feel like a narrative flow.`;
 
     } else if (type === 'health') {
       exampleStructure = `{
