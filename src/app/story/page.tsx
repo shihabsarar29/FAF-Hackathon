@@ -9,16 +9,18 @@ import Link from 'next/link';
 export default function StoryPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto mt-8">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Link href="/">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Explorer
-            </Button>
-          </Link>
-          <div>
+        <div className="mb-8">
+          <div className="mb-4">
+            <Link href="/">
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Explorer
+              </Button>
+            </Link>
+          </div>
+          <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-900">Story</h1>
             <p className="text-lg text-gray-600 mt-2">Building the future of interactive learning</p>
           </div>
@@ -82,9 +84,103 @@ export default function StoryPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p>
+              <p className="mb-6">
                 Most products share many steps. For example, two chocolate products might have 80% identical supply chain footage. By segmenting videos into reusable steps or effects, I can assemble complete videos from existing clips without regenerating them.
               </p>
+              
+              {/* Example Visualization */}
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h4 className="text-sm font-semibold text-gray-700 mb-4">Example: Chocolate Products Sharing Steps</h4>
+                
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Product 1 */}
+                  <div>
+                    <h5 className="text-sm font-medium text-gray-600 mb-3">🍫 Dark Chocolate Bar</h5>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <span className="text-sm">Cocoa Bean Harvesting</span>
+                        <span className="text-xs text-gray-500 ml-auto">Shared ✓</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <span className="text-sm">Fermentation & Drying</span>
+                        <span className="text-xs text-gray-500 ml-auto">Shared ✓</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <span className="text-sm">Roasting</span>
+                        <span className="text-xs text-gray-500 ml-auto">Shared ✓</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <span className="text-sm">Grinding</span>
+                        <span className="text-xs text-gray-500 ml-auto">Shared ✓</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                        <span className="text-sm">Dark Chocolate Mixing</span>
+                        <span className="text-xs text-orange-600 ml-auto">Unique</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <span className="text-sm">Molding & Packaging</span>
+                        <span className="text-xs text-gray-500 ml-auto">Shared ✓</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Product 2 */}
+                  <div>
+                    <h5 className="text-sm font-medium text-gray-600 mb-3">🥛 Milk Chocolate Bar</h5>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <span className="text-sm">Cocoa Bean Harvesting</span>
+                        <span className="text-xs text-gray-500 ml-auto">Shared ✓</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <span className="text-sm">Fermentation & Drying</span>
+                        <span className="text-xs text-gray-500 ml-auto">Shared ✓</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <span className="text-sm">Roasting</span>
+                        <span className="text-xs text-gray-500 ml-auto">Shared ✓</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <span className="text-sm">Grinding</span>
+                        <span className="text-xs text-gray-500 ml-auto">Shared ✓</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                        <span className="text-sm">Milk Chocolate Mixing</span>
+                        <span className="text-xs text-purple-600 ml-auto">Unique</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <span className="text-sm">Molding & Packaging</span>
+                        <span className="text-xs text-gray-500 ml-auto">Shared ✓</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Summary Stats */}
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                      <span className="text-gray-600">Shared Steps: 5/6 (83%)</span>
+                    </div>
+                    <div className="text-green-600 font-medium">
+                      🎯 Cost Savings: 83% reuse rate
+                    </div>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
 

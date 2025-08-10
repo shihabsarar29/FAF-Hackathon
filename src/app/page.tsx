@@ -378,7 +378,7 @@ export default function Home() {
       const data = await response.json();
       
       if (type === 'supply-chain' && data.supplyChain) {
-        setSupplyChain(data.supplyChain);
+      setSupplyChain(data.supplyChain);
         generateStepDetails(data.supplyChain, 'supply-chain');
       } else if (type === 'environmental' && data.environmental) {
         setEnvironmentalData(data.environmental);
@@ -418,11 +418,11 @@ export default function Home() {
       const detailPromises = items.map(async (item: any) => {
         try {
           const response = await fetch('/api/generate-step-details', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
               productName: initialData.productName,
               stepNumber: type === 'supply-chain' ? item.stepNumber : 
                           type === 'history' ? item.originNumber : 
@@ -432,11 +432,11 @@ export default function Home() {
                      item.category,
               title: item.title,
               type: type
-            }),
-          });
-          
+        }),
+      });
+      
           if (response.ok) {
-            const data = await response.json();
+      const data = await response.json();
             return { 
               ...item,
               ...data.stepDetails,
@@ -445,7 +445,7 @@ export default function Home() {
           } else {
             return { ...item, isDetailed: false };
           }
-        } catch (error) {
+    } catch (error) {
           console.error(`Error generating details for ${type} item:`, error);
           return { ...item, isDetailed: false };
         }
@@ -759,24 +759,23 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-8">
-          <div className="flex justify-between items-start mb-4">
-            <div></div>
-            <div className="text-center">
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                Product Knowledge Platform
-              </h1>
-              <p className="text-lg text-gray-600">
-                Discover how products are made, their environmental impact, and health effects with AI-powered insights
-              </p>
-            </div>
+      <div className="max-w-7xl mx-auto mt-8">
+                <div className="text-center mb-8">
+          <div className="flex justify-end mb-2">
             <Link href="/story">
               <Button variant="outline" className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4" />
                 Story
               </Button>
             </Link>
+          </div>
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Product Knowledge Platform
+            </h1>
+            <p className="text-lg text-gray-600">
+              Discover how products are made, their environmental impact, and health effects with AI-powered insights
+            </p>
           </div>
         </div>
 
@@ -797,14 +796,14 @@ export default function Home() {
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Button 
+            <Button 
                 onClick={() => generateContent('supply-chain')}
                 disabled={isLoading || isLoadingDetails || !productName.trim()}
-                className="w-full"
-                size="lg"
-              >
+              className="w-full"
+              size="lg"
+            >
                 {isLoading ? 'Generating...' : isLoadingDetails ? 'Loading Details...' : 'Generate Supply Chain'}
-              </Button>
+            </Button>
               
               <Button 
                 onClick={() => generateContent('environmental')}
@@ -843,8 +842,8 @@ export default function Home() {
           <>
             {/* Supply Chain Steps Section */}
             {supplyChain && (
-              <Card className="mb-6">
-                <CardHeader>
+            <Card className="mb-6">
+              <CardHeader>
                   <CardTitle>Supply Chain Steps</CardTitle>
                   <CardDescription>
                     Core production and manufacturing processes for {supplyChain.productName}
@@ -868,10 +867,10 @@ export default function Home() {
               <Card className="mb-6">
                 <CardHeader>
                   <CardTitle>Environmental Effects</CardTitle>
-                  <CardDescription>
+                <CardDescription>
                     Environmental impacts from producing {environmentalData.productName}
-                  </CardDescription>
-                </CardHeader>
+                </CardDescription>
+              </CardHeader>
                 <CardContent>
                   <div className="grid md:grid-cols-2 gap-6">
                     {environmentalData.environmentalEffects.map((effect, index) => (
@@ -882,7 +881,7 @@ export default function Home() {
                     ))}
                   </div>
                 </CardContent>
-              </Card>
+            </Card>
             )}
 
             {/* Health Effects Section */}
@@ -936,10 +935,10 @@ export default function Home() {
                 <CardTitle className="flex items-center justify-between">
                   Images & Audio Generation
                   {generatedImages && generatedImages.length > 0 && (
-                    <Button onClick={downloadImagesData} variant="outline" size="sm">
-                      Download Images Data
-                    </Button>
-                  )}
+                      <Button onClick={downloadImagesData} variant="outline" size="sm">
+                        Download Images Data
+                      </Button>
+                    )}
                 </CardTitle>
                 <CardDescription>
                   Automatically generating professional images and audio narration for each item
@@ -1106,10 +1105,10 @@ export default function Home() {
                             <CardHeader className="pb-3">
                                                             <CardTitle className="text-sm font-medium">
                                 Environmental {effect.effectNumber}: {effect.title}
-                              </CardTitle>
+                    </CardTitle>
                               <CardDescription className="text-xs">
                                 {effect.category} Environmental Impact
-                              </CardDescription>
+                    </CardDescription>
                   </CardHeader>
                             
                   <CardContent className="space-y-4">
@@ -1337,8 +1336,8 @@ export default function Home() {
                               </CardTitle>
                               <CardDescription className="text-xs">
                                 {origin.period}
-                              </CardDescription>
-                            </CardHeader>
+                </CardDescription>
+              </CardHeader>
                             
                             <CardContent className="space-y-4">
                               {/* Image Section */}
@@ -1432,8 +1431,8 @@ export default function Home() {
                                   </div>
                                 )}
                     </div>
-                  </CardContent>
-                </Card>
+              </CardContent>
+            </Card>
                         );
                       })}
             </div>
