@@ -134,6 +134,7 @@ Keep all content focused on the historical development of ${productName} during 
       // Default supply chain prompt
       exampleImagePrompt = "Professional industrial photography of chocolate tempering machines, workers in white coats, natural lighting through factory windows, DSLR camera wide shot, photorealistic --ar 16:9 --style raw";
       exampleVideoPrompt = "Industrial process demonstration";
+      console.log('Using example video prompt:', exampleVideoPrompt);
       
       prompt = `Generate focused details for this supply chain step:
 

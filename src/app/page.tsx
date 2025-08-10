@@ -500,9 +500,9 @@ export default function Home() {
         type: type === 'supply-chain' ? 'step' : 
               type === 'environmental' ? 'environmental' :
               type === 'health' ? 'health' : 'history',
-        stepNumber: type === 'supply-chain' ? item.stepNumber :
-                   type === 'history' ? item.originNumber :
-                   item.effectNumber
+        stepNumber: type === 'supply-chain' ? (item.stepNumber ?? 0) :
+                   type === 'history' ? (item.originNumber ?? 0) :
+                   (item.effectNumber ?? 0)
       }));
       
       console.log(`Generating images and audio for ${productName} with ${allItems.length} items:`, allItems.map(i => ({ title: i.title, imagePrompt: i.imagePrompt })));
@@ -510,7 +510,7 @@ export default function Home() {
       // Generate images and audio in parallel for each item
       const promises = allItems.map(async (item) => {
         // Use the imagePrompt from step details, fallback to fresh prompt if needed
-        const imagePrompt = item.imagePrompt || `Professional ${('stage' in item ? item.stage : 'category' in item ? item.category : 'period' in item ? item.period : 'unknown').toLowerCase()} process for ${productName}. ${item.description || item.title}. High quality photography, industrial setting, professional lighting.`;
+        const imagePrompt = item.imagePrompt || `Professional ${('stage' in item ? (item.stage || 'unknown') : 'category' in item ? (item.category || 'unknown') : 'period' in item ? (item.period || 'unknown') : 'unknown').toLowerCase()} process for ${productName}. ${item.description || item.title}. High quality photography, industrial setting, professional lighting.`;
         
         console.log(`Generating image for ${productName} - ${item.title} with prompt:`, imagePrompt);
         
@@ -533,7 +533,7 @@ export default function Home() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ 
-            text: item.videoScript || `${item.type === 'step' ? 'Step' : item.type === 'environmental' ? 'Environmental Effect' : 'Health Effect'} ${item.stepNumber}: ${item.title}. ${item.description || ''}`
+            text: item.videoScript || `${item.type === 'step' ? 'Step' : item.type === 'environmental' ? 'Environmental Effect' : item.type === 'health' ? 'Health Effect' : 'History'} ${item.stepNumber}: ${item.title}. ${item.description || ''}`
           }),
         });
 
@@ -555,7 +555,7 @@ export default function Home() {
             const audioData = await audioResponse.json();
             if (audioData.success) {
               audioResult = {
-                stepNumber: item.stepNumber,
+                stepNumber: item.stepNumber ?? 0,
                 success: true,
                 audioData: audioData.audioData,
                 mimeType: audioData.mimeType,
@@ -563,7 +563,7 @@ export default function Home() {
               };
             } else {
               audioResult = {
-                stepNumber: item.stepNumber,
+                stepNumber: item.stepNumber ?? 0,
                 success: false,
                 error: audioData.error || 'Audio generation failed'
               };
@@ -571,7 +571,7 @@ export default function Home() {
           } else {
             console.error(`Audio generation failed for item ${item.stepNumber}`);
             audioResult = {
-              stepNumber: item.stepNumber,
+              stepNumber: item.stepNumber ?? 0,
               success: false,
               error: 'Audio generation request failed'
             };
@@ -583,7 +583,7 @@ export default function Home() {
           return {
             image: null,
             audio: {
-              stepNumber: item.stepNumber,
+              stepNumber: item.stepNumber ?? 0,
               success: false,
               error: error instanceof Error ? error.message : 'Unknown error'
             }
@@ -608,6 +608,7 @@ export default function Home() {
     }
   };
 
+  // Keep original function for manual calls if needed
   const generateImagesAndAudio = async () => {
     if (!supplyChain && !environmentalData && !healthData && !historyData) return;
     
@@ -637,7 +638,7 @@ export default function Home() {
       // Generate images and audio in parallel for each item
       const promises = allItems.map(async (item) => {
         // Use the imagePrompt from step details, fallback to fresh prompt if needed
-        const imagePrompt = item.imagePrompt || `Professional ${('stage' in item ? item.stage : 'category' in item ? item.category : 'period' in item ? item.period : 'unknown').toLowerCase()} process for ${currentProductName}. ${item.description || item.title}. High quality photography, industrial setting, professional lighting.`;
+        const imagePrompt = item.imagePrompt || `Professional ${('stage' in item ? (item.stage || 'unknown') : 'category' in item ? (item.category || 'unknown') : 'period' in item ? (item.period || 'unknown') : 'unknown').toLowerCase()} process for ${currentProductName}. ${item.description || item.title}. High quality photography, industrial setting, professional lighting.`;
         
         console.log(`Generating image for ${currentProductName} - ${item.title} with prompt:`, imagePrompt);
         
@@ -682,7 +683,7 @@ export default function Home() {
             const audioData = await audioResponse.json();
             if (audioData.success) {
               audioResult = {
-                stepNumber: item.stepNumber,
+                stepNumber: item.stepNumber ?? 0,
                 success: true,
                 audioData: audioData.audioData,
                 mimeType: audioData.mimeType,
@@ -690,7 +691,7 @@ export default function Home() {
               };
             } else {
               audioResult = {
-                stepNumber: item.stepNumber,
+                stepNumber: item.stepNumber ?? 0,
                 success: false,
                 error: audioData.error || 'Audio generation failed'
               };
@@ -698,7 +699,7 @@ export default function Home() {
           } else {
             console.error(`Audio generation failed for item ${item.stepNumber}`);
             audioResult = {
-              stepNumber: item.stepNumber,
+              stepNumber: item.stepNumber ?? 0,
               success: false,
               error: 'Audio generation request failed'
             };
@@ -710,7 +711,7 @@ export default function Home() {
           return {
             image: null,
             audio: {
-              stepNumber: item.stepNumber,
+              stepNumber: item.stepNumber ?? 0,
               success: false,
               error: error instanceof Error ? error.message : 'Unknown error'
             }
@@ -741,8 +742,7 @@ export default function Home() {
     }
   };
 
-  // Keep the old function for backward compatibility, but redirect to new one
-  const generateImages = () => generateImagesAndAudio();
+  // Removed unused generateImages function
 
   const downloadImagesData = () => {
     if (!generatedImages.length) return;

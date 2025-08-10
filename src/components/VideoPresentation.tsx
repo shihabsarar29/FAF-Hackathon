@@ -483,7 +483,7 @@ export default function VideoPresentation({ items, images, audioData, contentTyp
                 {currentStepData?.videoScript && (
                   <div className="mt-3 pt-3 border-t border-white/20">
                     <p className="text-white text-base font-medium leading-relaxed">
-                      "{currentStepData.videoScript}"
+                      &ldquo;{currentStepData.videoScript}&rdquo;
                     </p>
                   </div>
                 )}

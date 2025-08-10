@@ -34,10 +34,10 @@ export default function StoryPage() {
           </CardHeader>
           <CardContent className="text-lg leading-relaxed">
             <p className="mb-4">
-              I'm building a video-based learning platform where users can explore a product's supply chain, environmental impact, and health effects—all in an interactive, gamified way. Think Alchemy, where players combine "elements" to create products, or multiplayer quizzes with leaderboards to keep engagement high.
+              I&apos;m building a video-based learning platform where users can explore a product&apos;s supply chain, environmental impact, and health effects—all in an interactive, gamified way. Think Alchemy, where players combine &ldquo;elements&rdquo; to create products, or multiplayer quizzes with leaderboards to keep engagement high.
             </p>
             <p>
-              Initially, I planned to generate videos using Veo 3, but with costs ranging from <strong>$15–$45 for a single one-minute video</strong>, mass adoption wasn't realistic. Video generation will eventually become cheaper, but I didn't want to wait. Instead, I designed a cost-optimized architecture that works now and can seamlessly upgrade to new tech later.
+              Initially, I planned to generate videos using Veo 3, but with costs ranging from <strong>$15–$45 for a single one-minute video</strong>, mass adoption wasn&apos;t realistic. Video generation will eventually become cheaper, but I didn&apos;t want to wait. Instead, I designed a cost-optimized architecture that works now and can seamlessly upgrade to new tech later.
             </p>
           </CardContent>
         </Card>
@@ -108,10 +108,10 @@ export default function StoryPage() {
               <CheckCircle className="w-6 h-6 text-green-600" />
               Prototype Status
             </CardTitle>
-            <CardDescription>What we've built so far</CardDescription>
+            <CardDescription>What we&apos;ve built so far</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="mb-4">I've already built a working pipeline:</p>
+            <p className="mb-4">I&apos;ve already built a working pipeline:</p>
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
