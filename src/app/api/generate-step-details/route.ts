@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { productName, stepNumber, stage, title } = await request.json();
+    const { productName, stepNumber, stage, title, type = 'supply-chain' } = await request.json();
 
     if (!productName || !stepNumber || !stage || !title) {
       return NextResponse.json(
@@ -19,7 +19,92 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const prompt = `Generate focused details for this supply chain step:
+    let prompt = '';
+    let exampleImagePrompt = '';
+    let exampleVideoPrompt = '';
+
+    if (type === 'environmental') {
+      const isPositiveEnvironmental = stage.toLowerCase() === 'positive';
+      
+      if (isPositiveEnvironmental) {
+        exampleImagePrompt = "Professional environmental photography of sustainable farming, green renewable energy systems, conservation efforts, natural landscape restoration, bright natural lighting --ar 16:9 --style raw";
+        exampleVideoPrompt = "Sustainable environmental practices demonstration";
+      } else {
+        exampleImagePrompt = "Professional environmental photography of deforestation impact, cleared forest land with logging equipment, aerial drone shot, documentary style, natural lighting --ar 16:9 --style raw";
+        exampleVideoPrompt = "Environmental impact documentation showing habitat destruction";
+      }
+      
+      prompt = `Generate focused details for this environmental effect:
+
+Product: ${productName}
+Effect ${stepNumber}: ${stage} Environmental Impact - ${title}
+
+Return ONLY a JSON object with these 4 fields:
+
+{
+  "stepNumber": ${stepNumber},
+  "stage": "${stage}",
+  "title": "${title}",
+  "description": "Short 1-2 sentence description of this environmental impact (${stage.toLowerCase()})",
+  "imagePrompt": "Environmental photography-style prompt with detailed visual description, documentary style, environmental ${stage.toLowerCase()} impact focus (max 30 words)",
+  "videoGenPrompt": "Brief prompt for environmental impact video generation (max 15 words)"
+}
+
+For the imagePrompt, create an environmental photography-style prompt that includes:
+${isPositiveEnvironmental ? 
+  `- Positive environmental documentation of ${productName} sustainable practices
+- Environmental restoration photography: "sustainable agriculture", "renewable energy", "conservation photography", "restoration projects"
+- Positive natural settings: "thriving ecosystems", "clean energy facilities", "restored habitats", "sustainable farms"
+- Professional environmental documentation: "nature photography", "conservation photography", "sustainable development photography"
+- Environmental restoration parameters: "--ar 16:9", "--style raw", "environmental success story", "conservation achievement"` :
+  `- Documentary photography of environmental impact from ${productName} production
+- Environmental/nature photography style: "environmental photography", "documentary photography", "aerial photography"
+- Natural settings: "forest clearing", "polluted water", "factory emissions", "waste sites"
+- Professional documentation: "DSLR camera", "drone photography", "wide landscape shot"
+- Environmental parameters: "--ar 16:9", "--style raw", "photojournalistic", "environmental impact"`
+}
+
+Example format: "${exampleImagePrompt}"
+
+Keep all content focused on the ${stage.toLowerCase()} environmental impact of ${productName} production.`;
+
+    } else if (type === 'health') {
+      exampleImagePrompt = "Professional medical photography of healthy food, fresh antioxidant-rich ingredients, clean studio lighting, macro lens close-up, health magazine style --ar 16:9 --style raw";
+      exampleVideoPrompt = "Health benefits demonstration showing nutritional value";
+      
+      prompt = `Generate focused details for this health effect:
+
+Product: ${productName}
+Effect ${stepNumber}: ${stage} - ${title}
+
+Return ONLY a JSON object with these 4 fields:
+
+{
+  "stepNumber": ${stepNumber},
+  "stage": "${stage}",
+  "title": "${title}",
+  "description": "Short 1-2 sentence description of this health effect",
+  "imagePrompt": "Health/medical photography-style prompt with detailed visual description, clinical or lifestyle focus (max 30 words)",
+  "videoGenPrompt": "Brief prompt for health impact video generation (max 15 words)"
+}
+
+For the imagePrompt, create a health/medical photography-style prompt that includes:
+- Medical or lifestyle photography showing health impact of ${productName}
+- Health photography style: "medical photography", "lifestyle photography", "clinical photography", "health magazine style"
+- Health-related visuals: "healthy lifestyle", "medical consultation", "nutritional benefits", "wellness concept"
+- Professional medical/lifestyle photography: "studio lighting", "macro lens", "clean background"
+- Health parameters: "--ar 16:9", "--style raw", "professional health imagery", "medical documentation"
+
+Example format: "${exampleImagePrompt}"
+
+Keep all content focused on the health impact of ${productName}.`;
+
+    } else {
+      // Default supply chain prompt
+      exampleImagePrompt = "Professional industrial photography of chocolate tempering machines, workers in white coats, natural lighting through factory windows, DSLR camera wide shot, photorealistic --ar 16:9 --style raw";
+      exampleVideoPrompt = "Industrial process demonstration";
+      
+      prompt = `Generate focused details for this supply chain step:
 
 Product: ${productName}
 Step ${stepNumber}: ${stage} - ${title}
@@ -31,11 +116,22 @@ Return ONLY a JSON object with these 4 fields:
   "stage": "${stage}",
   "title": "${title}",
   "description": "Short 1-2 sentence description of what happens in this step",
-  "imagePrompt": "Concise prompt for AI image generation (max 20 words)",
+  "imagePrompt": "Professional photography-style prompt with detailed visual description, lighting, camera angle, style parameters (max 30 words)",
   "videoGenPrompt": "Brief prompt for video generation (max 15 words)"
 }
 
+For the imagePrompt, create a professional photography-style prompt that includes:
+- Realistic photographic description of the ${stage} process for ${productName}
+- Photography style keywords: "professional photography", "industrial photography", "documentary photography", "commercial photography"
+- Photographic lighting: "natural lighting", "soft lighting", "dramatic lighting", "studio lighting"
+- Camera specifications: "DSLR camera", "wide angle lens", "macro lens", "telephoto lens"
+- Shot composition: "wide shot", "close-up", "medium shot", "overhead view"
+- Photography parameters: "--ar 16:9", "--style raw", "high resolution", "photorealistic"
+
+Example format: "${exampleImagePrompt}"
+
 Keep all content concise and focused. Make it specific to ${productName}.`;
+    }
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -44,7 +140,7 @@ Keep all content concise and focused. Make it specific to ${productName}.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'meta-llama/llama-4-maverick-17b-128e-instruct',
         messages: [
           {
             role: 'user',
@@ -91,14 +187,40 @@ Keep all content concise and focused. Make it specific to ${productName}.`;
       console.error('Response text:', responseText);
       
       // Fallback for step details
-      stepDetails = {
-        stepNumber: stepNumber,
-        stage: stage,
-        title: title,
-        description: `This step involves ${stage.toLowerCase()} in the ${productName} production process.`,
-        imagePrompt: `${stage} process for ${productName} production`,
-        videoGenPrompt: `${productName} ${stage.toLowerCase()} process`
-      };
+      if (type === 'environmental') {
+        const isPositiveEnvironmental = stage.toLowerCase() === 'positive';
+        
+        stepDetails = {
+          stepNumber: stepNumber,
+          stage: stage,
+          title: title,
+          description: `This environmental effect involves ${stage.toLowerCase()} impact from ${productName} production.`,
+          imagePrompt: isPositiveEnvironmental 
+            ? `Environmental conservation photography of ${productName} sustainable practices, renewable energy systems, natural restoration, bright daylight --ar 16:9 --style raw`
+            : `Environmental documentary photography of ${productName} ${title.toLowerCase()} impact, aerial view, natural landscape, photojournalistic style --ar 16:9 --style raw`,
+          videoGenPrompt: isPositiveEnvironmental
+            ? `${productName} sustainable environmental practices`
+            : `${productName} environmental impact ${title.toLowerCase()}`
+        };
+      } else if (type === 'health') {
+        stepDetails = {
+          stepNumber: stepNumber,
+          stage: stage,
+          title: title,
+          description: `This health effect involves ${stage.toLowerCase()} impact related to ${productName}.`,
+          imagePrompt: `Professional health photography of ${productName} ${stage.toLowerCase()} effect, medical consultation setting, clean studio lighting --ar 16:9 --style raw`,
+          videoGenPrompt: `${productName} health impact ${stage.toLowerCase()}`
+        };
+      } else {
+        stepDetails = {
+          stepNumber: stepNumber,
+          stage: stage,
+          title: title,
+          description: `This step involves ${stage.toLowerCase()} in the ${productName} production process.`,
+          imagePrompt: `Professional industrial photography of ${productName} ${stage.toLowerCase()} process, workers in action, natural lighting through factory windows, DSLR camera wide shot, photorealistic --ar 16:9 --style raw`,
+          videoGenPrompt: `${productName} ${stage.toLowerCase()} process`
+        };
+      }
     }
 
     return NextResponse.json({ stepDetails });

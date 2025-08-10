@@ -44,16 +44,16 @@ async function generateImageWithGemini(prompt: string): Promise<{ success: boole
       throw new Error('Google Generative AI API key not configured');
     }
 
-    const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent';
+    const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-preview-06-06:predict';
     
     const requestBody = {
-      contents: [{
-        parts: [
-          { text: prompt }
-        ]
-      }],
-      generationConfig: {
-        responseModalities: ['TEXT', 'IMAGE']
+      instances: [
+        {
+          prompt: prompt
+        }
+      ],
+      parameters: {
+        sampleCount: 1
       }
     };
 
@@ -69,35 +69,30 @@ async function generateImageWithGemini(prompt: string): Promise<{ success: boole
 
       if (!result.ok) {
         const errorText = await result.text();
-        console.error(`Gemini API error: ${result.status} - ${errorText}`);
-        throw new Error(`Gemini API error: ${result.status} - ${errorText}`);
+        console.error(`Imagen API error: ${result.status} - ${errorText}`);
+        throw new Error(`Imagen API error: ${result.status} - ${errorText}`);
       }
 
       return result.json();
     });
 
-    // Extract image from response
-    if (response.candidates && 
-        response.candidates.length > 0 && 
-        response.candidates[0].content &&
-        response.candidates[0].content.parts) {
+    // Extract image from Imagen API response
+    if (response.predictions && 
+        response.predictions.length > 0 && 
+        response.predictions[0].bytesBase64Encoded) {
       
-      for (const part of response.candidates[0].content.parts) {
-        if (part.inlineData && part.inlineData.data) {
-          return {
-            success: true,
-            imageData: part.inlineData.data
-          };
-        }
-      }
+      return {
+        success: true,
+        imageData: response.predictions[0].bytesBase64Encoded
+      };
     }
     
     return {
       success: false,
-      error: 'No image generated from Gemini API'
+      error: 'No image generated from Imagen API'
     };
   } catch (error) {
-    console.error('Error calling Gemini Image API:', error);
+    console.error('Error calling Imagen API:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error occurred'
@@ -155,7 +150,7 @@ Style: clean, modern, professional business photography, good lighting, high qua
                 type: 'base64_image'
               },
               success: true,
-              modelUsed: 'gemini-2.0-flash-preview-image-generation',
+              modelUsed: 'imagen-4.0-generate-preview-06-06',
               isImageGenerated: true
             };
           } else {
@@ -166,7 +161,7 @@ Style: clean, modern, professional business photography, good lighting, high qua
               imagePrompt: prompt,
               error: imageResult.error || 'Failed to generate image',
               success: false,
-              modelUsed: 'gemini-2.0-flash-preview-image-generation',
+              modelUsed: 'imagen-4.0-generate-preview-06-06',
               isImageGenerated: false
             };
           }
@@ -179,7 +174,7 @@ Style: clean, modern, professional business photography, good lighting, high qua
             title: step.title,
             error: error instanceof Error ? error.message : 'Failed to generate image',
             success: false,
-            modelUsed: 'gemini-2.0-flash-preview-image-generation',
+            modelUsed: 'imagen-4.0-generate-preview-06-06',
             isImageGenerated: false
           };
         }
