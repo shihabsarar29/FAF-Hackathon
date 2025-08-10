@@ -10,9 +10,8 @@ interface SupplyChainStep {
   stage: string;
   title: string;
   description?: string;
-  keyActivities?: string[];
-  estimatedDuration?: string;
-  keyStakeholders?: string[];
+  imagePrompt?: string;
+  videoGenPrompt?: string;
   videoScript?: string;
   isDetailed?: boolean;
 }
@@ -126,7 +125,11 @@ export default function Home() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          steps: supplyChain.supplyChainSteps 
+          steps: supplyChain.supplyChainSteps.map(step => ({
+            ...step,
+            // Use imagePrompt if available, otherwise create a basic prompt
+            prompt: step.imagePrompt || `Professional ${step.stage.toLowerCase()} process for ${supplyChain.productName}`
+          }))
         }),
       });
       
@@ -164,16 +167,10 @@ export default function Home() {
       scriptsContent += '-'.repeat(30) + '\n';
       scriptsContent += `Title: ${step.title}\n`;
       if (step.isDetailed) {
-        scriptsContent += `Duration: ${step.estimatedDuration}\n\n`;
+        scriptsContent += `Description: ${step.description}\n\n`;
         scriptsContent += `Video Script:\n${step.videoScript}\n\n`;
-        scriptsContent += `Key Activities:\n`;
-        step.keyActivities?.forEach(activity => {
-          scriptsContent += `• ${activity}\n`;
-        });
-        scriptsContent += `\nKey Stakeholders:\n`;
-        step.keyStakeholders?.forEach(stakeholder => {
-          scriptsContent += `• ${stakeholder}\n`;
-        });
+        scriptsContent += `Video Generation Prompt:\n${step.videoGenPrompt}\n\n`;
+        scriptsContent += `Image Generation Prompt:\n${step.imagePrompt}\n\n`;
       } else {
         scriptsContent += `Status: Details not yet loaded\n`;
       }
@@ -251,9 +248,9 @@ export default function Home() {
                     <Button onClick={downloadJSON} variant="outline" size="sm">
                       Download JSON
                     </Button>
-                    <Button onClick={downloadVideoScripts} variant="outline" size="sm">
-                      Download Video Scripts
-                    </Button>
+                                      <Button onClick={downloadVideoScripts} variant="outline" size="sm">
+                    Download All Details
+                  </Button>
                   </div>
                 </CardTitle>
                 <CardDescription>
@@ -409,7 +406,7 @@ export default function Home() {
                       </div>
                     </CardTitle>
                     <CardDescription>
-                      {step.isDetailed ? `Estimated Duration: ${step.estimatedDuration}` : 'Loading details...'}
+                      {step.isDetailed ? 'Step details loaded' : 'Loading details...'}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -427,30 +424,26 @@ export default function Home() {
                     
                     {step.isDetailed && (
                       <>
-                        <div className="grid md:grid-cols-2 gap-4">
+                        <div className="space-y-4">
                           <div>
-                            <h4 className="font-semibold mb-2">Key Activities:</h4>
-                            <ul className="list-disc list-inside space-y-1">
-                              {step.keyActivities?.map((activity, idx) => (
-                                <li key={idx} className="text-gray-700">{activity}</li>
-                              ))}
-                            </ul>
+                            <h4 className="font-semibold mb-2">Image Generation Prompt:</h4>
+                            <div className="bg-blue-50 p-3 rounded-md">
+                              <p className="text-blue-800 text-sm font-mono">{step.imagePrompt}</p>
+                            </div>
                           </div>
                           
                           <div>
-                            <h4 className="font-semibold mb-2">Key Stakeholders:</h4>
-                            <ul className="list-disc list-inside space-y-1">
-                              {step.keyStakeholders?.map((stakeholder, idx) => (
-                                <li key={idx} className="text-gray-700">{stakeholder}</li>
-                              ))}
-                            </ul>
+                            <h4 className="font-semibold mb-2">Video Generation Prompt:</h4>
+                            <div className="bg-green-50 p-3 rounded-md">
+                              <p className="text-green-800 text-sm font-mono">{step.videoGenPrompt}</p>
+                            </div>
                           </div>
-                        </div>
-                        
-                        <div>
-                          <h4 className="font-semibold mb-2">Video Script:</h4>
-                          <div className="bg-gray-50 p-3 rounded-md">
-                            <p className="text-gray-700 text-sm">{step.videoScript}</p>
+                          
+                          <div>
+                            <h4 className="font-semibold mb-2">Video Script:</h4>
+                            <div className="bg-gray-50 p-3 rounded-md">
+                              <p className="text-gray-700 text-sm">{step.videoScript}</p>
+                            </div>
                           </div>
                         </div>
                       </>

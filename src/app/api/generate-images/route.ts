@@ -5,11 +5,12 @@ interface SupplyChainStep {
   stepNumber: number;
   stage: string;
   title: string;
-  description: string;
-  keyActivities: string[];
-  estimatedDuration: string;
-  keyStakeholders: string[];
-  videoScript: string;
+  description?: string;
+  imagePrompt?: string;
+  videoGenPrompt?: string;
+  videoScript?: string;
+  prompt?: string; // Added by frontend for image generation
+  isDetailed?: boolean;
 }
 
 // Retry function with exponential backoff
@@ -133,9 +134,9 @@ export async function POST(request: NextRequest) {
     const imageResults = await Promise.all(
       supplyChainSteps.map(async (step: SupplyChainStep) => {
         try {
-          // Create a focused prompt for professional supply chain imagery
-          const prompt = `A professional business photograph showing ${step.stage.toLowerCase()}: ${step.title}. 
-${step.description}. 
+          // Use imagePrompt from step if available, otherwise create a focused prompt
+          const prompt = step.imagePrompt || step.prompt || `A professional business photograph showing ${step.stage.toLowerCase()}: ${step.title}. 
+${step.description || ''}. 
 Style: clean, modern, professional business photography, good lighting, high quality, industrial setting, business context, photorealistic.`;
 
           console.log(`Generating image for step ${step.stepNumber}: ${step.stage}`);

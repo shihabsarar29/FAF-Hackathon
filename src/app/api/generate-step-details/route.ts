@@ -16,25 +16,24 @@ export async function POST(request: NextRequest) {
 
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    const prompt = `Generate detailed information for this supply chain step:
+    const prompt = `Generate focused details for this supply chain step:
 
 Product: ${productName}
 Step ${stepNumber}: ${stage} - ${title}
 
-Return a JSON object with detailed information:
+Return ONLY a JSON object with these 5 fields:
 
 {
   "stepNumber": ${stepNumber},
   "stage": "${stage}",
   "title": "${title}",
-  "description": "Detailed description of this step (2-3 sentences)",
-  "keyActivities": ["Activity 1", "Activity 2", "Activity 3"],
-  "estimatedDuration": "Time estimate",
-  "keyStakeholders": ["Stakeholder 1", "Stakeholder 2"],
-  "videoScript": "Detailed script for video narration of this step (3-4 sentences)"
+  "description": "Short 1-2 sentence description of what happens in this step",
+  "imagePrompt": "Concise prompt for AI image generation (max 20 words)",
+  "videoGenPrompt": "Brief prompt for video generation (max 15 words)",
+  "videoScript": "Short narration script for this step (2-3 sentences max)"
 }
 
-Make it specific to ${productName} and focus on practical, actionable details.`;
+Keep all content concise and focused. Make it specific to ${productName}.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -52,11 +51,10 @@ Make it specific to ${productName} and focus on practical, actionable details.`;
           stepNumber: stepNumber,
           stage: stage,
           title: title,
-          description: `This step involves ${title.toLowerCase()} for ${productName} production, ensuring quality and efficiency throughout the process.`,
-          keyActivities: ["Process execution", "Quality control", "Documentation"],
-          estimatedDuration: "1-2 weeks",
-          keyStakeholders: ["Supply Chain Team", "Quality Assurance"],
-          videoScript: `In this critical step of ${productName} production, we focus on ${title.toLowerCase()}. This process ensures that quality standards are met and the supply chain operates efficiently.`
+          description: `This step handles ${title.toLowerCase()} for ${productName} production.`,
+          imagePrompt: `Professional ${stage.toLowerCase()} process for ${productName}`,
+          videoGenPrompt: `${stage} workflow for ${productName}`,
+          videoScript: `In this step, we focus on ${title.toLowerCase()} to ensure quality ${productName} production.`
         };
       }
     } catch {
@@ -65,11 +63,10 @@ Make it specific to ${productName} and focus on practical, actionable details.`;
         stepNumber: stepNumber,
         stage: stage,
         title: title,
-        description: `This step involves ${title.toLowerCase()} for ${productName} production, ensuring quality and efficiency throughout the process.`,
-        keyActivities: ["Process execution", "Quality control", "Documentation"],
-        estimatedDuration: "1-2 weeks",
-        keyStakeholders: ["Supply Chain Team", "Quality Assurance"],
-        videoScript: `In this critical step of ${productName} production, we focus on ${title.toLowerCase()}. This process ensures that quality standards are met and the supply chain operates efficiently.`
+        description: `This step handles ${title.toLowerCase()} for ${productName} production.`,
+        imagePrompt: `Professional ${stage.toLowerCase()} process for ${productName}`,
+        videoGenPrompt: `${stage} workflow for ${productName}`,
+        videoScript: `In this step, we focus on ${title.toLowerCase()} to ensure quality ${productName} production.`
       };
     }
 
