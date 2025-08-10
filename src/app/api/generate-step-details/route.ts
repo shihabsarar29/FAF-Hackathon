@@ -99,6 +99,37 @@ Example format: "${exampleImagePrompt}"
 
 Keep all content focused on the health impact of ${productName}.`;
 
+    } else if (type === 'history') {
+      exampleImagePrompt = "Professional historical photography of ancient chocolate making, traditional Mayan civilization, historical artifacts, sepia tone documentary style, museum quality lighting --ar 16:9 --style raw";
+      exampleVideoPrompt = "Historical documentation of product origins";
+      
+      prompt = `Generate focused details for this historical period:
+
+Product: ${productName}
+Period ${stepNumber}: ${stage} - ${title}
+
+Return ONLY a JSON object with these 4 fields:
+
+{
+  "stepNumber": ${stepNumber},
+  "stage": "${stage}",
+  "title": "${title}",
+  "description": "Short 1-2 sentence description of this historical period and its significance",
+  "imagePrompt": "Historical photography-style prompt with detailed visual description, documentary style, period-appropriate imagery (max 30 words)",
+  "videoGenPrompt": "Brief prompt for historical documentation video generation (max 15 words)"
+}
+
+For the imagePrompt, create a historical photography-style prompt that includes:
+- Historical documentation of ${productName} during the ${stage} period
+- Historical photography style: "historical photography", "documentary photography", "period photography", "archival photography"
+- Period-appropriate settings: "ancient civilizations", "historical artifacts", "traditional methods", "cultural heritage"
+- Professional historical documentation: "museum photography", "archaeological photography", "heritage documentation"
+- Historical parameters: "--ar 16:9", "--style raw", "historical accuracy", "documentary realism"
+
+Example format: "${exampleImagePrompt}"
+
+Keep all content focused on the historical development of ${productName} during the ${stage} period.`;
+
     } else {
       // Default supply chain prompt
       exampleImagePrompt = "Professional industrial photography of chocolate tempering machines, workers in white coats, natural lighting through factory windows, DSLR camera wide shot, photorealistic --ar 16:9 --style raw";
@@ -210,6 +241,15 @@ Keep all content concise and focused. Make it specific to ${productName}.`;
           description: `This health effect involves ${stage.toLowerCase()} impact related to ${productName}.`,
           imagePrompt: `Professional health photography of ${productName} ${stage.toLowerCase()} effect, medical consultation setting, clean studio lighting --ar 16:9 --style raw`,
           videoGenPrompt: `${productName} health impact ${stage.toLowerCase()}`
+        };
+      } else if (type === 'history') {
+        stepDetails = {
+          stepNumber: stepNumber,
+          stage: stage,
+          title: title,
+          description: `This historical period involves ${stage.toLowerCase()} development of ${productName}.`,
+          imagePrompt: `Historical photography of ${productName} during the ${stage} period, showcasing ancient methods, artifacts, and cultural heritage --ar 16:9 --style raw`,
+          videoGenPrompt: `Historical documentation of ${productName} during the ${stage} period`
         };
       } else {
         stepDetails = {

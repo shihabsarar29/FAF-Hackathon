@@ -11,9 +11,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!['supply-chain', 'environmental', 'health'].includes(type)) {
+    if (!['supply-chain', 'environmental', 'health', 'history'].includes(type)) {
       return NextResponse.json(
-        { error: 'Type must be supply-chain, environmental, or health' },
+        { error: 'Type must be supply-chain, environmental, health, or history' },
         { status: 400 }
       );
     }
@@ -165,6 +165,52 @@ Return ONLY a JSON object for ${productName} following this structure:
 ${exampleStructure}
 
 Each videoScript should be written in SIMPLE, PLAIN ENGLISH (10-15 words) like you're telling a story to a friend. Use everyday words and add conjunctions like "first", "then", "however", "finally" to make it feel like a narrative flow.`;
+    
+    } else if (type === 'history') {
+      exampleStructure = `{
+  "productName": "Chocolate",
+  "historyOrigins": [
+    {
+      "originNumber": 1,
+      "period": "Ancient Times",
+      "title": "Mayan Discovery",
+      "videoScript": "First, ancient Mayans discovered cocoa beans and made bitter drinks from them."
+    },
+    {
+      "originNumber": 2,
+      "period": "16th Century",
+      "title": "Spanish Colonization",
+      "videoScript": "Then, Spanish explorers brought cocoa beans back to Europe from Mexico."
+    },
+    {
+      "originNumber": 3,
+      "period": "Industrial Revolution",
+      "title": "Mass Production",
+      "videoScript": "Next, new machines helped factories make chocolate bars for everyone to buy."
+    },
+    {
+      "originNumber": 4,
+      "period": "Modern Era",
+      "title": "Global Industry",
+      "videoScript": "Finally, chocolate became a worldwide industry worth billions of dollars today."
+    }
+  ]
+}`;
+
+      prompt = `Generate 3-4 key HISTORICAL ORIGINS and development periods for: ${productName}
+
+Focus on the most important historical milestones in the development and spread of ${productName}, including:
+- Ancient/early origins and discovery
+- Key cultural or geographical developments
+- Major technological innovations
+- Modern commercialization and global spread
+
+Return ONLY a JSON object for ${productName} following this structure:
+${exampleStructure}
+
+Each videoScript should be written in SIMPLE, PLAIN ENGLISH (10-15 words) like you're telling a story to a friend. Use everyday words and add conjunctions like "first", "then", "next", "later", "finally" to make it feel like a historical narrative flow.
+
+Focus on the journey of how ${productName} developed from its origins to what it is today.`;
     }
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -233,6 +279,8 @@ Each videoScript should be written in SIMPLE, PLAIN ENGLISH (10-15 words) like y
       return NextResponse.json({ environmental: supplyChainData });
     } else if (type === 'health') {
       return NextResponse.json({ health: supplyChainData });
+    } else if (type === 'history') {
+      return NextResponse.json({ history: supplyChainData });
     }
   } catch (error) {
     console.error('Error generating supply chain overview:', error);

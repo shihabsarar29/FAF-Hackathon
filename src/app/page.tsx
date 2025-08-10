@@ -38,6 +38,17 @@ interface HealthEffect {
   isDetailed?: boolean;
 }
 
+interface HistoryOrigin {
+  originNumber: number;
+  period: string;
+  title: string;
+  videoScript?: string;
+  description?: string;
+  imagePrompt?: string;
+  videoGenPrompt?: string;
+  isDetailed?: boolean;
+}
+
 interface GeneratedImage {
   stepNumber: number;
   stage: string;
@@ -67,10 +78,10 @@ interface GeneratedAudio {
 }
 
 interface VideoPresentationProps {
-  items: (SupplyChainStep | EnvironmentalEffect | HealthEffect)[];
+  items: (SupplyChainStep | EnvironmentalEffect | HealthEffect | HistoryOrigin)[];
   images: GeneratedImage[];
   audioData: GeneratedAudio[];
-  contentType: 'supply-chain' | 'environmental' | 'health';
+  contentType: 'supply-chain' | 'environmental' | 'health' | 'history';
 }
 
 // Component for individual step details
@@ -260,6 +271,65 @@ function HealthCard({ effect }: { effect: HealthEffect }) {
   );
 }
 
+// Component for history origins
+function HistoryCard({ origin }: { origin: HistoryOrigin }) {
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-3">
+          <span className="bg-purple-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+            {origin.originNumber}
+          </span>
+          <div>
+            <div className="text-lg">{origin.period}</div>
+            <div className="text-sm text-gray-600 font-normal">{origin.title}</div>
+          </div>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {origin.isDetailed ? (
+          <>
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gray-600">Description</h4>
+              <div className="bg-gray-50 p-3 rounded-md">
+                <p className="text-gray-700 text-sm">{origin.description}</p>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gray-600">Video Script</h4>
+              <div className="bg-purple-50 p-3 rounded-md">
+                <p className="text-gray-700 text-sm italic">&ldquo;{origin.videoScript}&rdquo;</p>
+              </div>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <h4 className="text-sm font-medium mb-2 text-gray-600">Image Prompt</h4>
+                <div className="bg-green-50 p-3 rounded-md">
+                  <p className="text-green-800 text-xs font-mono">{origin.imagePrompt}</p>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium mb-2 text-gray-600">Video Prompt</h4>
+                <div className="bg-purple-50 p-3 rounded-md">
+                  <p className="text-purple-800 text-xs font-mono">{origin.videoGenPrompt}</p>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center gap-3 py-8">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
+            <p className="text-gray-600">Loading detailed information...</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // Video-like presentation component
 function VideoPresentation({ items, images, audioData, contentType }: VideoPresentationProps) {
   const [currentStep, setCurrentStep] = useState(0);
@@ -276,16 +346,18 @@ function VideoPresentation({ items, images, audioData, contentType }: VideoPrese
   const currentAudioStatusRef = React.useRef<string>('idle');
 
   // Helper function to get the ID from any item type
-  const getItemId = (item: SupplyChainStep | EnvironmentalEffect | HealthEffect): number => {
+  const getItemId = (item: SupplyChainStep | EnvironmentalEffect | HealthEffect | HistoryOrigin): number => {
     if ('stepNumber' in item) return item.stepNumber;
     if ('effectNumber' in item) return item.effectNumber;
+    if ('originNumber' in item) return item.originNumber;
     return 0;
   };
 
   // Helper function to get the stage/category from any item type
-  const getItemStage = (item: SupplyChainStep | EnvironmentalEffect | HealthEffect): string => {
+  const getItemStage = (item: SupplyChainStep | EnvironmentalEffect | HealthEffect | HistoryOrigin): string => {
     if ('stage' in item) return item.stage;
     if ('category' in item) return item.category;
+    if ('period' in item) return item.period;
     return '';
   };
 
@@ -618,9 +690,9 @@ function VideoPresentation({ items, images, audioData, contentType }: VideoPrese
   return (
     <Card className="mb-6">
       <CardHeader>
-        <CardTitle>Video-like Presentation ({presentationItems.length} {contentType === 'supply-chain' ? 'steps' : 'effects'})</CardTitle>
+        <CardTitle>Video-like Presentation ({presentationItems.length} {contentType === 'supply-chain' ? 'steps' : contentType === 'history' ? 'periods' : 'effects'})</CardTitle>
         <CardDescription>
-          Watch the {contentType === 'supply-chain' ? 'supply chain steps' : contentType === 'environmental' ? 'environmental effects' : 'health effects'} with synchronized images and narration
+          Watch the {contentType === 'supply-chain' ? 'supply chain steps' : contentType === 'environmental' ? 'environmental effects' : contentType === 'health' ? 'health effects' : 'historical origins'} with synchronized images and narration
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -755,12 +827,16 @@ export default function Home() {
     productName: string;
     healthEffects: HealthEffect[];
   } | null>(null);
+  const [historyData, setHistoryData] = useState<{
+    productName: string;
+    historyOrigins: HistoryOrigin[];
+  } | null>(null);
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
   const [generatedAudio, setGeneratedAudio] = useState<GeneratedAudio[]>([]);
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
 
-  const generateContent = async (type: 'supply-chain' | 'environmental' | 'health') => {
+  const generateContent = async (type: 'supply-chain' | 'environmental' | 'health' | 'history') => {
     if (!productName.trim()) return;
     
     setIsLoading(true);
@@ -769,6 +845,7 @@ export default function Home() {
     setSupplyChain(null);
     setEnvironmentalData(null);
     setHealthData(null);
+    setHistoryData(null);
     
     // Clear generated images and audio when generating any type
     setGeneratedImages([]);
@@ -794,6 +871,9 @@ export default function Home() {
       } else if (type === 'health' && data.health) {
         setHealthData(data.health);
         generateStepDetails(data.health, 'health');
+      } else if (type === 'history' && data.history) {
+        setHistoryData(data.history);
+        generateStepDetails(data.history, 'history');
       }
     } catch (error) {
       console.error('Error generating content:', error);
@@ -804,7 +884,7 @@ export default function Home() {
 
   const generateStepDetails = async (
     initialData: any,
-    type: 'supply-chain' | 'environmental' | 'health'
+    type: 'supply-chain' | 'environmental' | 'health' | 'history'
   ) => {
     setIsLoadingDetails(true);
     
@@ -816,6 +896,8 @@ export default function Home() {
         items = initialData.environmentalEffects || [];
       } else if (type === 'health') {
         items = initialData.healthEffects || [];
+      } else if (type === 'history') {
+        items = initialData.historyOrigins || [];
       }
 
       const detailPromises = items.map(async (item: any) => {
@@ -827,8 +909,12 @@ export default function Home() {
             },
             body: JSON.stringify({ 
               productName: initialData.productName,
-              stepNumber: type === 'supply-chain' ? item.stepNumber : item.effectNumber,
-              stage: type === 'supply-chain' ? item.stage : item.category,
+              stepNumber: type === 'supply-chain' ? item.stepNumber : 
+                          type === 'history' ? item.originNumber : 
+                          item.effectNumber,
+              stage: type === 'supply-chain' ? item.stage : 
+                     type === 'history' ? item.period : 
+                     item.category,
               title: item.title,
               type: type
             }),
@@ -868,6 +954,11 @@ export default function Home() {
           ...initialData,
           healthEffects: detailedItems
         });
+      } else if (type === 'history') {
+        setHistoryData({
+          ...initialData,
+          historyOrigins: detailedItems
+        });
       }
     } catch (error) {
       console.error('Error generating step details:', error);
@@ -877,7 +968,7 @@ export default function Home() {
   };
 
   const generateImagesAndAudio = async () => {
-    if (!supplyChain && !environmentalData && !healthData) return;
+    if (!supplyChain && !environmentalData && !healthData && !historyData) return;
     
     setIsGeneratingImages(true);
     setIsGeneratingAudio(true);
@@ -886,11 +977,13 @@ export default function Home() {
       const detailedSteps = supplyChain?.supplyChainSteps?.filter(step => step.isDetailed) || [];
       const detailedEnvironmental = environmentalData?.environmentalEffects?.filter(effect => effect.isDetailed) || [];
       const detailedHealth = healthData?.healthEffects?.filter(effect => effect.isDetailed) || [];
+      const detailedHistory = historyData?.historyOrigins?.filter(origin => origin.isDetailed) || [];
       
       const allItems = [
         ...detailedSteps.map(step => ({ ...step, type: 'step' })),
         ...detailedEnvironmental.map(effect => ({ ...effect, type: 'environmental', stepNumber: effect.effectNumber })),
-        ...detailedHealth.map(effect => ({ ...effect, type: 'health', stepNumber: effect.effectNumber }))
+        ...detailedHealth.map(effect => ({ ...effect, type: 'health', stepNumber: effect.effectNumber })),
+        ...detailedHistory.map(origin => ({ ...origin, type: 'history', stepNumber: origin.originNumber }))
       ];
       
       // Generate images and audio in parallel for each item
@@ -903,7 +996,7 @@ export default function Home() {
           body: JSON.stringify({ 
             steps: [item].map(i => ({
               ...i,
-              prompt: i.imagePrompt || `Professional ${('stage' in i ? i.stage : i.category).toLowerCase()} process for ${supplyChain?.productName || environmentalData?.productName || healthData?.productName || 'product'}`
+              prompt: i.imagePrompt || `Professional ${('stage' in i ? i.stage : 'category' in i ? i.category : 'period' in i ? i.period : 'unknown').toLowerCase()} process for ${supplyChain?.productName || environmentalData?.productName || healthData?.productName || historyData?.productName || 'product'}`
             }))
           }),
         });
@@ -1016,10 +1109,10 @@ export default function Home() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Supply Chain Generator
+            Product Impact Explorer
           </h1>
           <p className="text-lg text-gray-600">
-            Generate step-wise supply chain procedures for any product using AI
+            Discover how products are made, their environmental impact, and health effects with AI-powered insights
           </p>
         </div>
 
@@ -1039,7 +1132,7 @@ export default function Home() {
                 className="text-lg"
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Button 
                 onClick={() => generateContent('supply-chain')}
                 disabled={isLoading || isLoadingDetails || !productName.trim()}
@@ -1068,11 +1161,21 @@ export default function Home() {
               >
                 {isLoading ? 'Generating...' : isLoadingDetails ? 'Loading Details...' : 'Generate Health Effects'}
               </Button>
+              
+              <Button 
+                onClick={() => generateContent('history')}
+                disabled={isLoading || isLoadingDetails || !productName.trim()}
+                className="w-full"
+                size="lg"
+                variant="outline"
+              >
+                {isLoading ? 'Generating...' : isLoadingDetails ? 'Loading Details...' : 'Generate History of Origin'}
+              </Button>
             </div>
           </CardContent>
         </Card>
 
-                {(supplyChain || environmentalData || healthData) && (
+                {(supplyChain || environmentalData || healthData || historyData) && (
           <>
             {/* Supply Chain Steps Section */}
             {supplyChain && (
@@ -1101,10 +1204,10 @@ export default function Home() {
               <Card className="mb-6">
                 <CardHeader>
                   <CardTitle>Environmental Effects</CardTitle>
-                <CardDescription>
+                  <CardDescription>
                     Environmental impacts from producing {environmentalData.productName}
-                </CardDescription>
-              </CardHeader>
+                  </CardDescription>
+                </CardHeader>
                 <CardContent>
                   <div className="grid md:grid-cols-2 gap-6">
                     {environmentalData.environmentalEffects.map((effect, index) => (
@@ -1115,7 +1218,7 @@ export default function Home() {
                     ))}
                   </div>
                 </CardContent>
-            </Card>
+              </Card>
             )}
 
             {/* Health Effects Section */}
@@ -1140,10 +1243,33 @@ export default function Home() {
               </Card>
             )}
 
+            {/* History of Origin Section */}
+            {historyData && historyData.historyOrigins && historyData.historyOrigins.length > 0 && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>History of Origin</CardTitle>
+                  <CardDescription>
+                    Historical development and origins of {historyData.productName}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {historyData.historyOrigins.map((origin, index) => (
+                      <HistoryCard 
+                        key={`history-${index}`} 
+                        origin={origin} 
+                      />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Image & Audio Generation Section - Only show after step details are loaded */}
             {((supplyChain?.supplyChainSteps?.some(step => step.isDetailed)) || 
               (environmentalData?.environmentalEffects?.some(effect => effect.isDetailed)) ||
-              (healthData?.healthEffects?.some(effect => effect.isDetailed))) && (
+              (healthData?.healthEffects?.some(effect => effect.isDetailed)) ||
+              (historyData?.historyOrigins?.some(origin => origin.isDetailed))) && (
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
@@ -1154,7 +1280,8 @@ export default function Home() {
                         disabled={isGeneratingImages || isGeneratingAudio || isLoadingDetails || !(
                           (supplyChain?.supplyChainSteps?.some(step => step.isDetailed)) ||
                           (environmentalData?.environmentalEffects?.some(effect => effect.isDetailed)) ||
-                          (healthData?.healthEffects?.some(effect => effect.isDetailed))
+                          (healthData?.healthEffects?.some(effect => effect.isDetailed)) ||
+                          (historyData?.historyOrigins?.some(origin => origin.isDetailed))
                         )}
                       variant="default"
                       size="sm"
@@ -1183,7 +1310,8 @@ export default function Home() {
                         <div className="mt-1 text-sm text-gray-600">
                           Processing {(supplyChain?.supplyChainSteps?.filter(step => step.isDetailed).length || 0) + 
                             (environmentalData?.environmentalEffects?.filter(e => e.isDetailed).length || 0) + 
-                            (healthData?.healthEffects?.filter(h => h.isDetailed).length || 0)} items simultaneously
+                            (healthData?.healthEffects?.filter(h => h.isDetailed).length || 0) + 
+                            (historyData?.historyOrigins?.filter(o => o.isDetailed).length || 0)} items simultaneously
                         </div>
                       </div>
                     )}
@@ -1549,6 +1677,119 @@ export default function Home() {
                 </Card>
                         );
                       })}
+
+                      {/* History of Origin */}
+                      {(historyData?.historyOrigins || []).filter(origin => origin.isDetailed).map((origin) => {
+                        const image = generatedImages.find(img => img.stepNumber === origin.originNumber);
+                        const audio = generatedAudio.find(aud => aud.stepNumber === origin.originNumber);
+                        
+                        return (
+                          <Card key={`history-${origin.originNumber}`} className="overflow-hidden">
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-sm font-medium">
+                                History {origin.originNumber}: {origin.title}
+                              </CardTitle>
+                              <CardDescription className="text-xs">
+                                {origin.period}
+                              </CardDescription>
+                            </CardHeader>
+                            
+                            <CardContent className="space-y-4">
+                              {/* Image Section */}
+                      <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="text-xs font-medium text-gray-600">Image</span>
+                                  {image?.success ? (
+                                    <span className="text-green-600 text-xs">Ready</span>
+                                  ) : image ? (
+                                    <span className="text-red-600 text-xs">Failed</span>
+                                  ) : isGeneratingImages ? (
+                                    <span className="text-blue-600 text-xs">Generating...</span>
+                                  ) : (
+                                    <span className="text-gray-500 text-xs">Pending</span>
+                                  )}
+                      </div>
+                                
+                                {image?.success && image.imageData ? (
+                                  <div className="relative aspect-video bg-gray-100 rounded-md overflow-hidden">
+                                    <img
+                                      src={(() => {
+                                        if (typeof image.imageData === 'string') {
+                                          return `data:image/jpeg;base64,${image.imageData}`;
+                                        } else if (typeof image.imageData === 'object' && image.imageData.image) {
+                                          return `data:${image.imageData.mimeType || 'image/jpeg'};base64,${image.imageData.image}`;
+                                        }
+                                        return '';
+                                      })()}
+                                      alt={`Generated image for ${origin.title}`}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                ) : image?.error ? (
+                                  <div className="aspect-video bg-red-50 rounded-md flex items-center justify-center">
+                                    <div className="text-center text-red-600 text-xs px-2">
+                                      <div className="font-medium">Generation Failed</div>
+                                      <div>{image.error}</div>
+                                    </div>
+                                  </div>
+                                ) : isGeneratingImages ? (
+                                  <div className="aspect-video bg-blue-50 rounded-md flex items-center justify-center">
+                                    <div className="text-center text-blue-600">
+                                      <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-2"></div>
+                                      <div className="text-xs">Creating image...</div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="aspect-video bg-gray-100 rounded-md flex items-center justify-center">
+                                    <div className="text-gray-400 text-xs">Click Generate to create image</div>
+                                  </div>
+                                )}
+                    </div>
+                    
+                              {/* Audio Section */}
+                    <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="text-xs font-medium text-gray-600">Audio</span>
+                                  {audio?.success ? (
+                                    <span className="text-green-600 text-xs">Ready</span>
+                                  ) : audio ? (
+                                    <span className="text-red-600 text-xs">Failed</span>
+                                  ) : isGeneratingAudio ? (
+                                    <span className="text-blue-600 text-xs">Generating...</span>
+                                  ) : (
+                                    <span className="text-gray-500 text-xs">Pending</span>
+                                  )}
+                      </div>
+                                
+                                {audio?.success && audio.audioData ? (
+                                  <div className="bg-green-50 p-3 rounded-md">
+                                    <div className="text-center text-gray-600 text-xs italic">
+                                      &ldquo;{origin.videoScript}&rdquo;
+                                    </div>
+                                  </div>
+                                ) : audio?.error ? (
+                                  <div className="bg-red-50 p-3 rounded-md">
+                                    <div className="text-center text-red-600 text-xs">
+                                      <div className="font-medium">Generation Failed</div>
+                                      <div>{audio.error}</div>
+                                    </div>
+                                  </div>
+                                ) : isGeneratingAudio ? (
+                                  <div className="bg-blue-50 p-3 rounded-md">
+                                    <div className="text-center text-blue-600">
+                                      <div className="animate-pulse text-xs">Creating audio narration...</div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="bg-gray-100 p-3 rounded-md">
+                                    <div className="text-center text-gray-400 text-xs">Click Generate to create audio</div>
+                                  </div>
+                                )}
+                    </div>
+                  </CardContent>
+                </Card>
+                        );
+                      })}
             </div>
               </CardContent>
                 )}
@@ -1556,21 +1797,23 @@ export default function Home() {
             )}
 
             {/* Video Presentation Section */}
-            {generatedImages.length > 0 && generatedAudio.length > 0 && (supplyChain || environmentalData || healthData) && (
+            {generatedImages.length > 0 && generatedAudio.length > 0 && (supplyChain || environmentalData || healthData || historyData) && (
               <VideoPresentation 
                 items={
                   supplyChain?.supplyChainSteps || 
                   environmentalData?.environmentalEffects || 
                   healthData?.healthEffects || 
+                  historyData?.historyOrigins || 
                   []
                 }
                 images={generatedImages} 
                 audioData={generatedAudio} 
-                contentType={
-                  supplyChain ? 'supply-chain' : 
-                  environmentalData ? 'environmental' : 
-                  'health'
-                }
+                                  contentType={
+                    supplyChain ? 'supply-chain' : 
+                    environmentalData ? 'environmental' : 
+                    healthData ? 'health' :
+                    'history'
+                  }
               />
             )}
           </>
