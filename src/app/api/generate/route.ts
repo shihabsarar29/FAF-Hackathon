@@ -16,28 +16,27 @@ export async function POST(request: NextRequest) {
 
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    const prompt = `Generate a focused supply chain procedure for the product: ${productName}. 
+    const prompt = `Generate a quick overview of the 3-4 most critical supply chain steps for: ${productName}
 
-Focus on only the 3-4 most critical steps that are essential for this product's supply chain. Do not include all 6 stages unless absolutely necessary.
+Return ONLY a JSON object with short step titles - no detailed descriptions yet:
 
-Format the response as a JSON object with the following structure:
 {
   "productName": "${productName}",
   "supplyChainSteps": [
     {
       "stepNumber": 1,
-      "stage": "Critical Stage Name",
-      "title": "Essential step title",
-      "description": "Concise description of this critical step",
-      "keyActivities": ["Key activity 1", "Key activity 2"],
-      "estimatedDuration": "Time estimate",
-      "keyStakeholders": ["Primary stakeholder"],
-      "videoScript": "Brief script for video narration of this step"
+      "stage": "Raw Material Sourcing",
+      "title": "Procure Raw Materials"
+    },
+    {
+      "stepNumber": 2,
+      "stage": "Manufacturing",
+      "title": "Production Process"
     }
   ]
 }
 
-Keep each step focused and essential. Only include steps that are truly critical for this specific product's supply chain.`;
+Keep titles short (3-6 words). Focus only on the most essential steps for ${productName}.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -51,19 +50,24 @@ Keep each step focused and essential. Only include steps that are truly critical
       if (jsonMatch) {
         supplyChainData = JSON.parse(jsonMatch[0]);
       } else {
-        // Fallback: create structured data from text
+        // Fallback: create basic structure
         supplyChainData = {
           productName: productName,
           supplyChainSteps: [
             {
               stepNumber: 1,
               stage: "Raw Material Sourcing",
-              title: "Material Procurement",
-              description: responseText,
-              keyActivities: ["Identify suppliers", "Negotiate contracts", "Quality assessment"],
-              estimatedDuration: "2-3 weeks",
-              keyStakeholders: ["Procurement Team", "Suppliers"],
-              videoScript: responseText
+              title: "Procure Raw Materials"
+            },
+            {
+              stepNumber: 2,
+              stage: "Manufacturing",
+              title: "Production Process"
+            },
+            {
+              stepNumber: 3,
+              stage: "Distribution",
+              title: "Product Distribution"
             }
           ]
         };
@@ -75,13 +79,18 @@ Keep each step focused and essential. Only include steps that are truly critical
         supplyChainSteps: [
           {
             stepNumber: 1,
-            stage: "Supply Chain Process",
-            title: "Complete Process",
-            description: responseText,
-            keyActivities: ["Process execution", "Quality control", "Delivery"],
-            estimatedDuration: "Varies by product",
-            keyStakeholders: ["Supply Chain Team", "Manufacturing", "Logistics"],
-            videoScript: responseText
+            stage: "Raw Material Sourcing",
+            title: "Procure Raw Materials"
+          },
+          {
+            stepNumber: 2,
+            stage: "Manufacturing", 
+            title: "Production Process"
+          },
+          {
+            stepNumber: 3,
+            stage: "Distribution",
+            title: "Product Distribution"
           }
         ]
       };
@@ -89,9 +98,9 @@ Keep each step focused and essential. Only include steps that are truly critical
 
     return NextResponse.json({ supplyChain: supplyChainData });
   } catch (error) {
-    console.error('Error generating supply chain:', error);
+    console.error('Error generating supply chain overview:', error);
     return NextResponse.json(
-      { error: 'Failed to generate supply chain' },
+      { error: 'Failed to generate supply chain overview' },
       { status: 500 }
     );
   }

@@ -9,16 +9,12 @@ interface SupplyChainStep {
   stepNumber: number;
   stage: string;
   title: string;
-  description: string;
-  keyActivities: string[];
-  estimatedDuration: string;
-  keyStakeholders: string[];
-  videoScript: string;
-}
-
-interface SupplyChainData {
-  productName: string;
-  supplyChainSteps: SupplyChainStep[];
+  description?: string;
+  keyActivities?: string[];
+  estimatedDuration?: string;
+  keyStakeholders?: string[];
+  videoScript?: string;
+  isDetailed?: boolean;
 }
 
 interface GeneratedImage {
@@ -36,15 +32,18 @@ interface GeneratedImage {
 export default function Home() {
   const [productName, setProductName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isGeneratingImages, setIsGeneratingImages] = useState(false);
-  const [supplyChain, setSupplyChain] = useState<SupplyChainData | null>(null);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [supplyChain, setSupplyChain] = useState<{ productName: string; supplyChainSteps: SupplyChainStep[] } | null>(null);
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
+  const [isGeneratingImages, setIsGeneratingImages] = useState(false);
 
   const generateSupplyChain = async () => {
     if (!productName.trim()) return;
     
     setIsLoading(true);
-    setGeneratedImages([]); // Reset images when generating new supply chain
+    setSupplyChain(null);
+    setGeneratedImages([]);
+    
     try {
       const response = await fetch('/api/generate', {
         method: 'POST',
@@ -55,12 +54,64 @@ export default function Home() {
       });
       
       const data = await response.json();
-      setSupplyChain(data.supplyChain);
+      
+      if (data.supplyChain) {
+        // Set initial supply chain with basic info
+        setSupplyChain(data.supplyChain);
+        
+        // Now generate detailed information for each step in parallel
+        generateStepDetails(data.supplyChain);
+      }
     } catch (error) {
       console.error('Error generating supply chain:', error);
-      setSupplyChain(null);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const generateStepDetails = async (initialSupplyChain: { productName: string; supplyChainSteps: SupplyChainStep[] }) => {
+    setIsLoadingDetails(true);
+    
+    try {
+      // Generate details for all steps in parallel
+      const detailPromises = initialSupplyChain.supplyChainSteps.map(async (step) => {
+        try {
+          const response = await fetch('/api/generate-step-details', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              productName: initialSupplyChain.productName,
+              stepNumber: step.stepNumber,
+              stage: step.stage,
+              title: step.title
+            }),
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            return { ...data.stepDetails, isDetailed: true };
+          } else {
+            return { ...step, isDetailed: false };
+          }
+        } catch (error) {
+          console.error(`Error generating details for step ${step.stepNumber}:`, error);
+          return { ...step, isDetailed: false };
+        }
+      });
+
+      const detailedSteps = await Promise.all(detailPromises);
+      
+      // Update supply chain with detailed information
+      setSupplyChain({
+        ...initialSupplyChain,
+        supplyChainSteps: detailedSteps
+      });
+    } catch (error) {
+      console.error('Error generating step details:', error);
+    } finally {
+      setIsLoadingDetails(false);
     }
   };
 
@@ -112,16 +163,20 @@ export default function Home() {
       scriptsContent += `STEP ${step.stepNumber}: ${step.stage.toUpperCase()}\n`;
       scriptsContent += '-'.repeat(30) + '\n';
       scriptsContent += `Title: ${step.title}\n`;
-      scriptsContent += `Duration: ${step.estimatedDuration}\n\n`;
-      scriptsContent += `Video Script:\n${step.videoScript}\n\n`;
-      scriptsContent += `Key Activities:\n`;
-      step.keyActivities.forEach(activity => {
-        scriptsContent += `• ${activity}\n`;
-      });
-      scriptsContent += `\nKey Stakeholders:\n`;
-      step.keyStakeholders.forEach(stakeholder => {
-        scriptsContent += `• ${stakeholder}\n`;
-      });
+      if (step.isDetailed) {
+        scriptsContent += `Duration: ${step.estimatedDuration}\n\n`;
+        scriptsContent += `Video Script:\n${step.videoScript}\n\n`;
+        scriptsContent += `Key Activities:\n`;
+        step.keyActivities?.forEach(activity => {
+          scriptsContent += `• ${activity}\n`;
+        });
+        scriptsContent += `\nKey Stakeholders:\n`;
+        step.keyStakeholders?.forEach(stakeholder => {
+          scriptsContent += `• ${stakeholder}\n`;
+        });
+      } else {
+        scriptsContent += `Status: Details not yet loaded\n`;
+      }
       scriptsContent += '\n' + '='.repeat(50) + '\n\n';
     });
     
@@ -177,11 +232,11 @@ export default function Home() {
             </div>
             <Button 
               onClick={generateSupplyChain}
-              disabled={isLoading || !productName.trim()}
+              disabled={isLoading || isLoadingDetails || !productName.trim()}
               className="w-full"
               size="lg"
             >
-              {isLoading ? 'Generating...' : 'Generate Supply Chain'}
+              {isLoading ? 'Generating Overview...' : isLoadingDetails ? 'Loading Details...' : 'Generate Supply Chain'}
             </Button>
           </CardContent>
         </Card>
@@ -215,7 +270,7 @@ export default function Home() {
                   <div className="flex gap-2">
                     <Button 
                       onClick={generateImages}
-                      disabled={isGeneratingImages}
+                      disabled={isGeneratingImages || isLoadingDetails || !supplyChain.supplyChainSteps.some(step => step.isDetailed)}
                       variant="default"
                       size="sm"
                     >
@@ -354,41 +409,52 @@ export default function Home() {
                       </div>
                     </CardTitle>
                     <CardDescription>
-                      Estimated Duration: {step.estimatedDuration}
+                      {step.isDetailed ? `Estimated Duration: ${step.estimatedDuration}` : 'Loading details...'}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div>
-                      <h4 className="font-semibold mb-2">Description:</h4>
-                      <p className="text-gray-700">{step.description}</p>
-                    </div>
-                    
-                    <div className="grid md:grid-cols-2 gap-4">
+                    {step.isDetailed ? (
                       <div>
-                        <h4 className="font-semibold mb-2">Key Activities:</h4>
-                        <ul className="list-disc list-inside space-y-1">
-                          {step.keyActivities.map((activity, idx) => (
-                            <li key={idx} className="text-gray-700">{activity}</li>
-                          ))}
-                        </ul>
+                        <h4 className="font-semibold mb-2">Description:</h4>
+                        <p className="text-gray-700">{step.description}</p>
                       </div>
-                      
-                      <div>
-                        <h4 className="font-semibold mb-2">Key Stakeholders:</h4>
-                        <ul className="list-disc list-inside space-y-1">
-                          {step.keyStakeholders.map((stakeholder, idx) => (
-                            <li key={idx} className="text-gray-700">{stakeholder}</li>
-                          ))}
-                        </ul>
+                    ) : (
+                      <div className="flex items-center gap-3 py-4">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                        <p className="text-gray-600">Loading detailed information...</p>
                       </div>
-                    </div>
+                    )}
                     
-                    <div>
-                      <h4 className="font-semibold mb-2">Video Script:</h4>
-                      <div className="bg-gray-50 p-3 rounded-md">
-                        <p className="text-gray-700 text-sm">{step.videoScript}</p>
-                      </div>
-                    </div>
+                    {step.isDetailed && (
+                      <>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div>
+                            <h4 className="font-semibold mb-2">Key Activities:</h4>
+                            <ul className="list-disc list-inside space-y-1">
+                              {step.keyActivities?.map((activity, idx) => (
+                                <li key={idx} className="text-gray-700">{activity}</li>
+                              ))}
+                            </ul>
+                          </div>
+                          
+                          <div>
+                            <h4 className="font-semibold mb-2">Key Stakeholders:</h4>
+                            <ul className="list-disc list-inside space-y-1">
+                              {step.keyStakeholders?.map((stakeholder, idx) => (
+                                <li key={idx} className="text-gray-700">{stakeholder}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <h4 className="font-semibold mb-2">Video Script:</h4>
+                          <div className="bg-gray-50 p-3 rounded-md">
+                            <p className="text-gray-700 text-sm">{step.videoScript}</p>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
               ))}
