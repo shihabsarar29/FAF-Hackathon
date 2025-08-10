@@ -1,7 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextRequest, NextResponse } from 'next/server';
-
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY!);
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,14 +11,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'Groq API key not configured' },
+        { status: 500 }
+      );
+    }
 
     const prompt = `Generate focused details for this supply chain step:
 
 Product: ${productName}
 Step ${stepNumber}: ${stage} - ${title}
 
-Return ONLY a JSON object with these 5 fields:
+Return ONLY a JSON object with these 4 fields:
 
 {
   "stepNumber": ${stepNumber},
@@ -29,16 +32,51 @@ Return ONLY a JSON object with these 5 fields:
   "title": "${title}",
   "description": "Short 1-2 sentence description of what happens in this step",
   "imagePrompt": "Concise prompt for AI image generation (max 20 words)",
-  "videoGenPrompt": "Brief prompt for video generation (max 15 words)",
-  "videoScript": "ONE SENTENCE narration script for this step (10-15 words max)"
+  "videoGenPrompt": "Brief prompt for video generation (max 15 words)"
 }
 
-Keep all content concise and focused. Make it specific to ${productName}. The videoScript must be ONE sentence only, no more than 15 words.`;
+Keep all content concise and focused. Make it specific to ${productName}.`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const responseText = response.text();
-    
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.5,
+        max_tokens: 1024,
+        top_p: 1,
+        stream: false
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Groq API error: ${response.status} - ${errorText}`);
+      return NextResponse.json(
+        { error: `Groq API error: ${response.status}` },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
+    const responseText = data.choices[0]?.message?.content;
+
+    if (!responseText) {
+      return NextResponse.json(
+        { error: 'No response from Groq API' },
+        { status: 500 }
+      );
+    }
+
     // Try to extract JSON from the response
     let stepDetails;
     try {
@@ -46,27 +84,20 @@ Keep all content concise and focused. Make it specific to ${productName}. The vi
       if (jsonMatch) {
         stepDetails = JSON.parse(jsonMatch[0]);
       } else {
-        // Fallback: create structured data
-        stepDetails = {
-          stepNumber: stepNumber,
-          stage: stage,
-          title: title,
-          description: `This step handles ${title.toLowerCase()} for ${productName} production.`,
-          imagePrompt: `Professional ${stage.toLowerCase()} process for ${productName}`,
-          videoGenPrompt: `${stage} workflow for ${productName}`,
-          videoScript: `This step focuses on ${title.toLowerCase()} for ${productName}.`
-        };
+        throw new Error('No JSON found in response');
       }
-    } catch {
-      // If JSON parsing fails, create a structured fallback
+    } catch (error) {
+      console.error('JSON parsing error:', error);
+      console.error('Response text:', responseText);
+      
+      // Fallback for step details
       stepDetails = {
         stepNumber: stepNumber,
         stage: stage,
         title: title,
-        description: `This step handles ${title.toLowerCase()} for ${productName} production.`,
-        imagePrompt: `Professional ${stage.toLowerCase()} process for ${productName}`,
-        videoGenPrompt: `${stage} workflow for ${productName}`,
-        videoScript: `This step focuses on ${title.toLowerCase()} for ${productName}.`
+        description: `This step involves ${stage.toLowerCase()} in the ${productName} production process.`,
+        imagePrompt: `${stage} process for ${productName} production`,
+        videoGenPrompt: `${productName} ${stage.toLowerCase()} process`
       };
     }
 

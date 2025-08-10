@@ -1,7 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextRequest, NextResponse } from 'next/server';
-
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY!);
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,33 +11,102 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'Groq API key not configured' },
+        { status: 500 }
+      );
+    }
 
-    const prompt = `Generate a quick overview of the 3-4 most critical supply chain steps for: ${productName}
+    const prompt = `Generate a detailed overview of the 5-6 most critical PRODUCTION steps for: ${productName}
 
-Return ONLY a JSON object with short step titles - no detailed descriptions yet:
+Focus ONLY on core manufacturing/production processes. EXCLUDE packaging, distribution, marketing, and sales.
 
+Example for Chocolate:
 {
-  "productName": "${productName}",
+  "productName": "Chocolate",
   "supplyChainSteps": [
     {
       "stepNumber": 1,
-      "stage": "Raw Material Sourcing",
-      "title": "Procure Raw Materials"
+      "stage": "Harvesting",
+      "title": "Cocoa Bean Harvesting",
+      "videoScript": "First, workers pick ripe cocoa pods from trees by hand."
     },
     {
       "stepNumber": 2,
-      "stage": "Manufacturing",
-      "title": "Production Process"
+      "stage": "Fermentation & Drying",
+      "title": "Bean Processing",
+      "videoScript": "Then, the beans sit in boxes for a few days to ferment and develop flavor."
+    },
+    {
+      "stepNumber": 3,
+      "stage": "Roasting",
+      "title": "Bean Roasting",
+      "videoScript": "Next, the beans go into big ovens and get roasted until they smell good."
+    },
+    {
+      "stepNumber": 4,
+      "stage": "Grinding",
+      "title": "Cocoa Mass Creation",
+      "videoScript": "After that, machines grind the roasted beans into a thick paste."
+    },
+    {
+      "stepNumber": 5,
+      "stage": "Mixing & Conching",
+      "title": "Chocolate Mixing",
+      "videoScript": "Now, sugar and milk get mixed with the paste to make smooth chocolate."
+    },
+    {
+      "stepNumber": 6,
+      "stage": "Molding & Cooling",
+      "title": "Final Shaping",
+      "videoScript": "Finally, the hot chocolate gets poured into molds and cooled down."
     }
   ]
 }
 
-Keep titles short (3-6 words). Focus only on the most essential steps for ${productName}.`;
+Return ONLY a JSON object for ${productName} following this structure. Each videoScript should be written in SIMPLE, PLAIN ENGLISH (10-15 words) like you're telling a story to a friend. Use everyday words and add conjunctions like "first", "then", "next", "after that", "now", "finally" to make it feel like a narrative flow. Just describe what actually happens in simple terms but connect the steps together.`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const responseText = response.text();
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile', // Llama 3.3 70B (latest available)
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 2048,
+        top_p: 1,
+        stream: false
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Groq API error: ${response.status} - ${errorText}`);
+      return NextResponse.json(
+        { error: `Groq API error: ${response.status}` },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
+    const responseText = data.choices[0]?.message?.content;
+
+    if (!responseText) {
+      return NextResponse.json(
+        { error: 'No response from Groq API' },
+        { status: 500 }
+      );
+    }
     
     // Try to extract JSON from the response
     let supplyChainData;
@@ -50,50 +116,15 @@ Keep titles short (3-6 words). Focus only on the most essential steps for ${prod
       if (jsonMatch) {
         supplyChainData = JSON.parse(jsonMatch[0]);
       } else {
-        // Fallback: create basic structure
-        supplyChainData = {
-          productName: productName,
-          supplyChainSteps: [
-            {
-              stepNumber: 1,
-              stage: "Raw Material Sourcing",
-              title: "Procure Raw Materials"
-            },
-            {
-              stepNumber: 2,
-              stage: "Manufacturing",
-              title: "Production Process"
-            },
-            {
-              stepNumber: 3,
-              stage: "Distribution",
-              title: "Product Distribution"
-            }
-          ]
-        };
+        throw new Error('No JSON found in response');
       }
-    } catch {
-      // If JSON parsing fails, create a structured fallback
-      supplyChainData = {
-        productName: productName,
-        supplyChainSteps: [
-          {
-            stepNumber: 1,
-            stage: "Raw Material Sourcing",
-            title: "Procure Raw Materials"
-          },
-          {
-            stepNumber: 2,
-            stage: "Manufacturing", 
-            title: "Production Process"
-          },
-          {
-            stepNumber: 3,
-            stage: "Distribution",
-            title: "Product Distribution"
-          }
-        ]
-      };
+    } catch (error) {
+      console.error('JSON parsing error:', error);
+      console.error('Response text:', responseText);
+      return NextResponse.json(
+        { error: 'Failed to parse AI response. Please try again.' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ supplyChain: supplyChainData });

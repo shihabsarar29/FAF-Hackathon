@@ -1,11 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import React from 'react'; // Added for React.useEffect
-import { useGeminiAudio } from '@/hooks/useGeminiAudio';
 
 interface SupplyChainStep {
   stepNumber: number;
@@ -46,23 +44,17 @@ interface GeneratedAudio {
   generationTime?: number;
 }
 
-// Component for individual step with text-to-speech
-function StepCard({ step }: { step: SupplyChainStep }) {
-  const {
-    audioStatus,
-    isLoading,
-    error,
-    start: startAudio,
-    pause: pauseAudio,
-    stop: stopAudio,
-    resume: resumeAudio,
-  } = useGeminiAudio({ 
-    text: step.videoScript || `Step ${step.stepNumber}: ${step.title}. ${step.description || ''}`,
-  });
+interface VideoPresentationProps {
+  steps: SupplyChainStep[];
+  images: GeneratedImage[];
+  audioData: GeneratedAudio[];
+}
 
+// Component for individual step details
+function StepCard({ step }: { step: SupplyChainStep }) {
   return (
-    <Card className="border-l-4 border-l-blue-500">
-      <CardHeader>
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-3">
           <span className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
             {step.stepNumber}
@@ -72,229 +64,115 @@ function StepCard({ step }: { step: SupplyChainStep }) {
             <div className="text-sm text-gray-600 font-normal">{step.title}</div>
           </div>
         </CardTitle>
-        <CardDescription>
-          {step.isDetailed ? 'Step details loaded' : 'Loading details...'}
-        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {step.isDetailed ? (
-          <div>
-            <h4 className="font-semibold mb-2">Description:</h4>
-            <p className="text-gray-700">{step.description}</p>
-          </div>
-        ) : (
-          <div className="flex items-center gap-3 py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-            <p className="text-gray-600">Loading detailed information...</p>
-          </div>
-        )}
-        
-        {step.isDetailed && (
           <>
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-semibold mb-2">Image Generation Prompt:</h4>
-                <div className="bg-blue-50 p-3 rounded-md">
-                  <p className="text-blue-800 text-sm font-mono">{step.imagePrompt}</p>
-                </div>
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gray-600">📝 Description</h4>
+              <div className="bg-gray-50 p-3 rounded-md">
+                <p className="text-gray-700 text-sm">{step.description}</p>
               </div>
-              
+            </div>
+            
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gray-600">🎬 Video Script</h4>
+              <div className="bg-blue-50 p-3 rounded-md">
+                <p className="text-gray-700 text-sm italic">&ldquo;{step.videoScript}&rdquo;</p>
+              </div>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <h4 className="font-semibold mb-2">Video Generation Prompt:</h4>
+                <h4 className="text-sm font-medium mb-2 text-gray-600">🖼️ Image Prompt</h4>
                 <div className="bg-green-50 p-3 rounded-md">
-                  <p className="text-green-800 text-sm font-mono">{step.videoGenPrompt}</p>
+                  <p className="text-green-800 text-xs font-mono">{step.imagePrompt}</p>
                 </div>
               </div>
               
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-semibold">Video Script:</h4>
-                  <div className="flex gap-2">
-                    {audioStatus === "idle" || audioStatus === "ended" ? (
-                      <Button 
-                        onClick={startAudio} 
-                        size="sm" 
-                        variant="outline"
-                        className="text-xs"
-                        disabled={!step.videoScript || isLoading}
-                      >
-                        {isLoading ? "⏳ Loading..." : "🔊 Play Audio"}
-                      </Button>
-                    ) : audioStatus === "playing" ? (
-                      <Button 
-                        onClick={pauseAudio} 
-                        size="sm" 
-                        variant="outline"
-                        className="text-xs"
-                      >
-                        ⏸️ Pause
-                      </Button>
-                    ) : audioStatus === "paused" ? (
-                      <Button 
-                        onClick={resumeAudio} 
-                        size="sm" 
-                        variant="outline"
-                        className="text-xs"
-                      >
-                        ▶️ Resume
-                      </Button>
-                    ) : null}
-                    <Button 
-                      onClick={stopAudio} 
-                      size="sm" 
-                      variant="outline"
-                      className="text-xs"
-                      disabled={audioStatus === "idle"}
-                    >
-                      ⏹️ Stop
-                    </Button>
-                  </div>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-md">
-                  <p className="text-gray-700 text-sm">{step.videoScript}</p>
-                  {audioStatus === "playing" && (
-                    <div className="mt-2 text-xs text-blue-600 flex items-center gap-1">
-                      <div className="animate-pulse w-2 h-2 bg-blue-600 rounded-full"></div>
-                      Playing audio...
-                    </div>
-                  )}
-                  {isLoading && (
-                    <div className="mt-2 text-xs text-orange-600">
-                      Generating audio...
-                    </div>
-                  )}
-                  {error && (
-                    <div className="mt-2 text-xs text-red-600">
-                      Error: {error}
-                    </div>
-                  )}
+                <h4 className="text-sm font-medium mb-2 text-gray-600">🎥 Video Prompt</h4>
+                <div className="bg-purple-50 p-3 rounded-md">
+                  <p className="text-purple-800 text-xs font-mono">{step.videoGenPrompt}</p>
                 </div>
               </div>
             </div>
           </>
+        ) : (
+          <div className="flex items-center gap-3 py-8">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+            <p className="text-gray-600">Loading detailed information...</p>
+          </div>
         )}
       </CardContent>
     </Card>
   );
 }
 
-// Component for playing all scripts in sequence
-function PlayAllScripts({ steps }: { steps: SupplyChainStep[] }) {
-  const allScripts = steps
-    .filter(step => step.isDetailed && step.videoScript)
-    .map(step => `Step ${step.stepNumber}: ${step.stage}. ${step.videoScript}`)
-    .join('. ');
-
-  const {
-    audioStatus,
-    isLoading,
-    error,
-    start: startAudio,
-    pause: pauseAudio,
-    stop: stopAudio,
-    resume: resumeAudio,
-  } = useGeminiAudio({ text: allScripts });
-
-  const hasScripts = steps.some(step => step.isDetailed && step.videoScript);
-
-  if (!hasScripts) {
-    return null;
-  }
-
-  return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          🎧 Audio Narration
-          <div className="flex gap-2">
-            {audioStatus === "idle" || audioStatus === "ended" ? (
-              <Button 
-                onClick={startAudio} 
-                variant="default" 
-                size="sm"
-                className="bg-green-600 hover:bg-green-700"
-                disabled={isLoading}
-              >
-                {isLoading ? "⏳ Loading..." : "🔊 Play All Scripts"}
-              </Button>
-            ) : audioStatus === "playing" ? (
-              <Button 
-                onClick={pauseAudio} 
-                variant="outline" 
-                size="sm"
-              >
-                ⏸️ Pause All
-              </Button>
-            ) : audioStatus === "paused" ? (
-              <Button 
-                onClick={resumeAudio} 
-                variant="default" 
-                size="sm"
-                className="bg-green-600 hover:bg-green-700"
-              >
-                ▶️ Resume All
-              </Button>
-            ) : null}
-            <Button 
-              onClick={stopAudio} 
-              variant="outline" 
-              size="sm"
-              disabled={audioStatus === "idle"}
-            >
-              ⏹️ Stop All
-            </Button>
-          </div>
-        </CardTitle>
-        <CardDescription>
-          Listen to all video scripts narrated in sequence
-          {audioStatus === "playing" && (
-            <div className="mt-2 text-green-600 flex items-center gap-1">
-              <div className="animate-pulse w-2 h-2 bg-green-600 rounded-full"></div>
-              Playing all scripts...
-            </div>
-          )}
-          {isLoading && (
-            <div className="mt-2 text-orange-600">
-              Generating audio...
-            </div>
-          )}
-          {error && (
-            <div className="mt-2 text-red-600">
-              Error: {error}
-            </div>
-          )}
-        </CardDescription>
-      </CardHeader>
-    </Card>
-  );
-}
-
 // Video-like presentation component
-function VideoPresentation({ steps, images, audioData }: { 
-  steps: SupplyChainStep[]; 
-  images: GeneratedImage[];
-  audioData: GeneratedAudio[];
-}) {
+function VideoPresentation({ steps, images, audioData }: VideoPresentationProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const previousAudioStatusRef = React.useRef<string>('idle');
-  const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const [audioStatus, setAudioStatus] = useState<'idle' | 'loading' | 'playing' | 'paused' | 'ended' | 'error'>('idle');
   const [audioError, setAudioError] = useState<string | null>(null);
+  const [stepDurations, setStepDurations] = useState<{ [stepNumber: number]: number }>({}); // Actual durations
+  const [totalDuration, setTotalDuration] = useState(0); // Total presentation duration
+  const [absoluteCurrentTime, setAbsoluteCurrentTime] = useState(0); // Absolute time in presentation
+
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+  const previousAudioStatusRef = React.useRef<string>('idle');
   const currentAudioStatusRef = React.useRef<string>('idle');
 
   // Get steps that have both images and audio
   const presentationSteps = steps.filter(step => {
     const hasImage = images.some(img => img.stepNumber === step.stepNumber && img.success);
-    const hasAudio = audioData.some(audio => audio.stepNumber === step.stepNumber && audio.success);
+    const hasAudio = audioData.some((audio: GeneratedAudio) => audio.stepNumber === step.stepNumber && audio.success);
     return step.isDetailed && step.videoScript && hasImage && hasAudio;
   });
 
-  // Get current step data
+  // Calculate step start times and total duration based on actual or estimated durations
+  const { stepStartTimes, totalTime } = React.useMemo(() => {
+    const times: number[] = [0];
+    let cumulativeTime = 0;
+    
+    presentationSteps.forEach((step, index) => {
+      // Use actual duration if available, otherwise estimate 5 seconds
+      const stepDuration = stepDurations[step.stepNumber] || 5;
+      cumulativeTime += stepDuration;
+      if (index < presentationSteps.length - 1) {
+        times.push(cumulativeTime);
+      }
+    });
+    
+    return { stepStartTimes: times, totalTime: cumulativeTime };
+  }, [presentationSteps, stepDurations]);
+
+  // Update total duration when it changes
+  React.useEffect(() => {
+    setTotalDuration(totalTime);
+  }, [totalTime]);
+
+  // Calculate linear progress based on absolute time position
+  const progress = React.useMemo(() => {
+    if (totalDuration === 0) return 0;
+    return Math.min((absoluteCurrentTime / totalDuration) * 100, 100);
+  }, [absoluteCurrentTime, totalDuration]);
+
+  // Helper function to format time as MM:SS
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Format current and total time
+  const currentTimeFormatted = formatTime(absoluteCurrentTime);
+  const totalTimeFormatted = formatTime(totalDuration);
+
   const currentStepData = presentationSteps[currentStep];
   const currentImage = images.find(img => img.stepNumber === currentStepData?.stepNumber);
-  const currentAudio = audioData.find(audio => audio.stepNumber === currentStepData?.stepNumber);
+  const currentAudio = audioData.find((audio: GeneratedAudio) => audio.stepNumber === currentStepData?.stepNumber);
 
   // Function to play pre-generated audio
   const playCurrentStepAudio = React.useCallback(async () => {
@@ -304,41 +182,6 @@ function VideoPresentation({ steps, images, audioData }: {
       setAudioError('No audio data available');
       return;
     }
-
-    // Function to convert PCM to WAV (moved inside useCallback)
-    const pcmToWav = (pcmData: ArrayBuffer, sampleRate: number = 24000, channels: number = 1): ArrayBuffer => {
-      const pcmLength = pcmData.byteLength;
-      const wavLength = 44 + pcmLength;
-      
-      const buffer = new ArrayBuffer(wavLength);
-      const view = new DataView(buffer);
-      
-      const writeString = (offset: number, string: string) => {
-        for (let i = 0; i < string.length; i++) {
-          view.setUint8(offset + i, string.charCodeAt(i));
-        }
-      };
-      
-      writeString(0, 'RIFF');
-      view.setUint32(4, wavLength - 8, true);
-      writeString(8, 'WAVE');
-      writeString(12, 'fmt ');
-      view.setUint32(16, 16, true);
-      view.setUint16(20, 1, true);
-      view.setUint16(22, channels, true);
-      view.setUint32(24, sampleRate, true);
-      view.setUint32(28, sampleRate * channels * 2, true);
-      view.setUint16(32, channels * 2, true);
-      view.setUint16(34, 16, true);
-      writeString(36, 'data');
-      view.setUint32(40, pcmLength, true);
-      
-      const pcmView = new Uint8Array(pcmData);
-      const wavView = new Uint8Array(buffer);
-      wavView.set(pcmView, 44);
-      
-      return buffer;
-    };
 
     try {
       setAudioStatus('loading');
@@ -364,17 +207,9 @@ function VideoPresentation({ steps, images, audioData }: {
         bytes[i] = binaryData.charCodeAt(i);
       }
 
-      let audioUrl: string;
-      
-      if (currentAudio.mimeType && currentAudio.mimeType.includes('pcm')) {
-        console.log('Converting pre-generated PCM to WAV...');
-        const wavBuffer = pcmToWav(bytes.buffer, 24000, 1);
-        const blob = new Blob([wavBuffer], { type: 'audio/wav' });
-        audioUrl = URL.createObjectURL(blob);
-      } else {
-        const blob = new Blob([bytes], { type: currentAudio.mimeType || 'audio/wav' });
-        audioUrl = URL.createObjectURL(blob);
-      }
+      // Create audio blob (OpenAI returns MP3 format)
+      const blob = new Blob([bytes], { type: currentAudio.mimeType || 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(blob);
 
       // Create new audio element
       const audio = new Audio(audioUrl);
@@ -406,6 +241,13 @@ function VideoPresentation({ steps, images, audioData }: {
           const progress = (audio.currentTime / audio.duration) * 100;
           const timeLeft = audio.duration - audio.currentTime;
           
+          // Update absolute time within current step only, but ensure it never goes backward
+          const stepStartTime = stepStartTimes[currentStep] || 0;
+          const absoluteTime = stepStartTime + audio.currentTime;
+          
+          // Only update if the new time is greater than current time (prevents backward jumps)
+          setAbsoluteCurrentTime(prevTime => Math.max(prevTime, absoluteTime));
+          
           // Log progress when near the end
           if (progress > 95) {
             console.log(`[AUDIO] Audio ${progress.toFixed(1)}% complete for step ${currentStepData?.stepNumber}, ${timeLeft.toFixed(1)}s left`);
@@ -421,6 +263,14 @@ function VideoPresentation({ steps, images, audioData }: {
       
       const handleLoadedData = () => {
         console.log(`[AUDIO] Audio loaded for step ${currentStepData?.stepNumber}, duration: ${audio.duration}s`);
+        
+        // Store actual duration for this step
+        if (audio.duration > 0 && currentStepData) {
+          setStepDurations(prev => ({
+            ...prev,
+            [currentStepData.stepNumber]: audio.duration
+          }));
+        }
       };
       
       const handleError = (e: Event) => {
@@ -454,7 +304,7 @@ function VideoPresentation({ steps, images, audioData }: {
       setAudioError(error instanceof Error ? error.message : 'Failed to play audio');
       setAudioStatus('error');
     }
-  }, [currentAudio, currentStepData]);
+  }, [currentAudio, currentStepData, stepStartTimes]);
 
   // Detect when audio finishes and advance to next step
   React.useEffect(() => {
@@ -535,6 +385,7 @@ function VideoPresentation({ steps, images, audioData }: {
     setIsPaused(false);
     setAudioStatus('idle');
     setAudioError(null);
+    setAbsoluteCurrentTime(0); // Reset absolute time
     
     if (!isPaused) {
       setCurrentStep(0);
@@ -568,6 +419,7 @@ function VideoPresentation({ steps, images, audioData }: {
     setCurrentStep(0);
     setAudioStatus('idle');
     setAudioError(null);
+    setAbsoluteCurrentTime(0); // Reset absolute time
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
@@ -576,6 +428,9 @@ function VideoPresentation({ steps, images, audioData }: {
 
   const handleStepClick = (stepIndex: number) => {
     setCurrentStep(stepIndex);
+    // Set absolute time to the start of the clicked step
+    const stepStartTime = stepStartTimes[stepIndex] || 0;
+    setAbsoluteCurrentTime(stepStartTime);
     if (isPlaying && !isPaused) {
       // Will trigger audio playback via useEffect
     }
@@ -593,8 +448,6 @@ function VideoPresentation({ steps, images, audioData }: {
       </Card>
     );
   }
-
-  const progress = presentationSteps.length > 0 ? ((currentStep + 1) / presentationSteps.length) * 100 : 0;
 
   return (
     <Card className="mb-6">
@@ -683,7 +536,7 @@ function VideoPresentation({ steps, images, audioData }: {
           <div className="space-y-2">
             <div className="flex justify-between text-sm text-gray-600">
               <span>Step {currentStep + 1} of {presentationSteps.length}</span>
-              <span>{progress.toFixed(0)}% complete</span>
+              <span>{currentTimeFormatted} / {totalTimeFormatted}</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
@@ -786,7 +639,11 @@ export default function Home() {
           
           if (response.ok) {
             const data = await response.json();
-            return { ...data.stepDetails, isDetailed: true };
+            return { 
+              ...step, // Preserve original data including videoScript from overview
+              ...data.stepDetails, // Add detailed information
+              isDetailed: true 
+            };
           } else {
             return { ...step, isDetailed: false };
           }
@@ -924,49 +781,6 @@ export default function Home() {
   // Keep the old function for backward compatibility, but redirect to new one
   const generateImages = () => generateImagesAndAudio();
 
-  const downloadJSON = () => {
-    if (!supplyChain) return;
-    
-    const dataStr = JSON.stringify(supplyChain, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${supplyChain.productName.replace(/\s+/g, '_')}_supply_chain.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const downloadVideoScripts = () => {
-    if (!supplyChain) return;
-    
-    let scriptsContent = `Supply Chain Video Scripts for ${supplyChain.productName}\n`;
-    scriptsContent += '='.repeat(50) + '\n\n';
-    
-    supplyChain.supplyChainSteps.forEach((step) => {
-      scriptsContent += `STEP ${step.stepNumber}: ${step.stage.toUpperCase()}\n`;
-      scriptsContent += '-'.repeat(30) + '\n';
-      scriptsContent += `Title: ${step.title}\n`;
-      if (step.isDetailed) {
-        scriptsContent += `Description: ${step.description}\n\n`;
-        scriptsContent += `Video Script:\n${step.videoScript}\n\n`;
-        scriptsContent += `Video Generation Prompt:\n${step.videoGenPrompt}\n\n`;
-        scriptsContent += `Image Generation Prompt:\n${step.imagePrompt}\n\n`;
-      } else {
-        scriptsContent += `Status: Details not yet loaded\n`;
-      }
-      scriptsContent += '\n' + '='.repeat(50) + '\n\n';
-    });
-    
-    const dataBlob = new Blob([scriptsContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${supplyChain.productName.replace(/\s+/g, '_')}_video_scripts.txt`;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
   const downloadImagesData = () => {
     if (!generatedImages.length) return;
     
@@ -1021,180 +835,8 @@ export default function Home() {
 
         {supplyChain && (
           <>
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  Supply Chain Procedure for: {supplyChain.productName}
-                  <div className="flex gap-2">
-                    <Button onClick={downloadJSON} variant="outline" size="sm">
-                      Download JSON
-                    </Button>
-                    <Button onClick={downloadVideoScripts} variant="outline" size="sm">
-                      Download All Details
-                    </Button>
-                  </div>
-                </CardTitle>
-                <CardDescription>
-                  Structured data for video generation and analysis
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            {/* Image Generation Section */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  Generate Images & Audio for Each Step
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={generateImages}
-                      disabled={isGeneratingImages || isGeneratingAudio || isLoadingDetails || !supplyChain.supplyChainSteps.some(step => step.isDetailed)}
-                      variant="default"
-                      size="sm"
-                    >
-                      {isGeneratingImages || isGeneratingAudio ? 'Generating Content...' : 'Generate Images & Audio'}
-                    </Button>
-                    {generatedImages && generatedImages.length > 0 && (
-                      <Button onClick={downloadImagesData} variant="outline" size="sm">
-                        Download Images Data
-                      </Button>
-                    )}
-                  </div>
-                </CardTitle>
-                <CardDescription>
-                  Generate professional images and audio narration for each supply chain step
-                  {(isGeneratingImages || isGeneratingAudio) && (
-                    <div className="mt-2">
-                      <div className="flex items-center gap-2 text-blue-600">
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
-                        <span>
-                          {isGeneratingImages && isGeneratingAudio ? 'Generating images and audio in parallel...' : 
-                           isGeneratingImages ? 'Generating images...' : 
-                           'Generating audio...'}
-                        </span>
-                      </div>
-                      <div className="mt-1 text-sm text-gray-600">
-                        Processing {supplyChain.supplyChainSteps.filter(step => step.isDetailed).length} steps simultaneously
-                      </div>
-                    </div>
-                  )}
-                  {generatedImages.length > 0 && (
-                    <div className="mt-2 text-green-600">
-                      ✅ Images: {generatedImages.filter(img => img.success).length}/{generatedImages.length} generated successfully
-                    </div>
-                  )}
-                  {generatedAudio.length > 0 && (
-                    <div className="mt-1 text-green-600">
-                      🔊 Audio: {generatedAudio.filter(audio => audio.success).length}/{generatedAudio.length} generated successfully
-                    </div>
-                  )}
-                </CardDescription>
-              </CardHeader>
-              {(generatedImages.length > 0 || generatedAudio.length > 0) && (
-                <CardContent>
-                  <div className="grid gap-4">
-                    {supplyChain.supplyChainSteps.filter(step => step.isDetailed).map((step) => {
-                      const image = generatedImages.find(img => img.stepNumber === step.stepNumber);
-                      const audio = generatedAudio.find(aud => aud.stepNumber === step.stepNumber);
-                      
-                      return (
-                        <div key={step.stepNumber} className="border rounded-lg p-4">
-                          <h4 className="font-semibold mb-3">
-                            Step {step.stepNumber}: {step.stage} - {step.title}
-                          </h4>
-                          
-                          <div className="grid md:grid-cols-2 gap-4">
-                            {/* Image Section */}
-                            <div>
-                              <h5 className="text-sm font-medium mb-2 flex items-center gap-2">
-                                🖼️ Image 
-                                {image?.success ? (
-                                  <span className="text-green-600 text-xs">✅ Generated</span>
-                                ) : image ? (
-                                  <span className="text-red-600 text-xs">❌ Failed</span>
-                                ) : (
-                                  <span className="text-gray-500 text-xs">⏳ Pending</span>
-                                )}
-                              </h5>
-                              
-                              {image?.success && image.imageData && (
-                                <div className="space-y-2">
-                                  <img
-                                    src={(() => {
-                                      // Handle different image data structures
-                                      if (typeof image.imageData === 'string') {
-                                        return `data:image/jpeg;base64,${image.imageData}`;
-                                      } else if (typeof image.imageData === 'object' && image.imageData.image) {
-                                        return `data:${image.imageData.mimeType || 'image/jpeg'};base64,${image.imageData.image}`;
-                                      }
-                                      return '';
-                                    })()}
-                                    alt={`Generated image for ${step.title}`}
-                                    className="w-full h-32 object-cover rounded border"
-                                    onError={(_e) => {
-                                      console.error('Image load error for step', step.stepNumber, ':', image.imageData);
-                                    }}
-                                  />
-                                </div>
-                              )}
-                              
-                              {image?.error && (
-                                <div className="text-red-600 text-sm bg-red-50 p-2 rounded">
-                                  Error: {image.error}
-                                </div>
-                              )}
-                            </div>
-                            
-                            {/* Audio Section */}
-                            <div>
-                              <h5 className="text-sm font-medium mb-2 flex items-center gap-2">
-                                🔊 Audio 
-                                {audio?.success ? (
-                                  <span className="text-green-600 text-xs">✅ Generated</span>
-                                ) : audio ? (
-                                  <span className="text-red-600 text-xs">❌ Failed</span>
-                                ) : (
-                                  <span className="text-gray-500 text-xs">⏳ Pending</span>
-                                )}
-                              </h5>
-                              
-                              {audio?.success && audio.audioData && (
-                                <div className="space-y-2">
-                                  <div className="bg-green-50 p-3 rounded border">
-                                    <div className="text-sm">
-                                      <div className="font-medium text-green-800">Audio Ready</div>
-                                      <div className="text-green-600 text-xs mt-1">
-                                        Type: {audio.mimeType || 'audio/pcm'} 
-                                        {audio.generationTime && ` • ${audio.generationTime.toFixed(1)}s to generate`}
-                                      </div>
-                                      <div className="text-gray-600 text-xs mt-1">
-                                        Script: &ldquo;{step.videoScript?.substring(0, 100)}...&rdquo;
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                              
-                              {audio?.error && (
-                                <div className="text-red-600 text-sm bg-red-50 p-2 rounded">
-                                  Error: {audio.error}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              )}
-            </Card>
-
-            <PlayAllScripts steps={supplyChain.supplyChainSteps} />
-
-            <VideoPresentation steps={supplyChain.supplyChainSteps} images={generatedImages} audioData={generatedAudio} />
-
-            <div className="grid gap-6">
+            {/* Step Details Section */}
+            <div className="grid md:grid-cols-2 gap-6 mb-6">
               {supplyChain.supplyChainSteps.map((step, index) => (
                 <StepCard 
                   key={`step-${index}`} 
@@ -1203,19 +845,196 @@ export default function Home() {
               ))}
             </div>
 
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Raw JSON Data</CardTitle>
-                <CardDescription>
-                  Complete structured data for API integration and video generation tools
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <pre className="bg-gray-900 text-green-400 p-4 rounded-md overflow-x-auto text-xs">
-                  {JSON.stringify(supplyChain, null, 2)}
-                </pre>
-              </CardContent>
-            </Card>
+            {/* Image & Audio Generation Section - Only show after step details are loaded */}
+            {supplyChain.supplyChainSteps.some(step => step.isDetailed) && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    Generate Images & Audio for Each Step
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={generateImages}
+                        disabled={isGeneratingImages || isGeneratingAudio || isLoadingDetails || !supplyChain.supplyChainSteps.some(step => step.isDetailed)}
+                        variant="default"
+                        size="sm"
+                      >
+                        {isGeneratingImages || isGeneratingAudio ? 'Generating Content...' : 'Generate Images & Audio'}
+                      </Button>
+                      {generatedImages && generatedImages.length > 0 && (
+                        <Button onClick={downloadImagesData} variant="outline" size="sm">
+                          Download Images Data
+                        </Button>
+                      )}
+                    </div>
+                  </CardTitle>
+                  <CardDescription>
+                    Generate professional images and audio narration for each supply chain step
+                    {(isGeneratingImages || isGeneratingAudio) && (
+                      <div className="mt-2">
+                        <div className="flex items-center gap-2 text-blue-600">
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                          <span>
+                            {isGeneratingImages && isGeneratingAudio ? 'Generating images and audio in parallel...' : 
+                             isGeneratingImages ? 'Generating images...' : 
+                             'Generating audio...'}
+                          </span>
+                        </div>
+                        <div className="mt-1 text-sm text-gray-600">
+                          Processing {supplyChain.supplyChainSteps.filter(step => step.isDetailed).length} steps simultaneously
+                        </div>
+                      </div>
+                    )}
+                    {generatedImages.length > 0 && (
+                      <div className="mt-2 text-green-600">
+                        ✅ Images: {generatedImages.filter(img => img.success).length}/{generatedImages.length} generated successfully
+                      </div>
+                    )}
+                    {generatedAudio.length > 0 && (
+                      <div className="mt-1 text-green-600">
+                        🔊 Audio: {generatedAudio.filter(audio => audio.success).length}/{generatedAudio.length} generated successfully
+                      </div>
+                    )}
+                  </CardDescription>
+                </CardHeader>
+                
+                {/* Show content cards as soon as any content is generated */}
+                {(generatedImages.length > 0 || generatedAudio.length > 0 || isGeneratingImages || isGeneratingAudio) && (
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {supplyChain.supplyChainSteps.filter(step => step.isDetailed).map((step) => {
+                        const image = generatedImages.find(img => img.stepNumber === step.stepNumber);
+                        const audio = generatedAudio.find(aud => aud.stepNumber === step.stepNumber);
+                        
+                        return (
+                          <Card key={step.stepNumber} className="overflow-hidden">
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-sm font-medium">
+                                Step {step.stepNumber}: {step.title}
+                              </CardTitle>
+                              <CardDescription className="text-xs">
+                                {step.stage}
+                              </CardDescription>
+                            </CardHeader>
+                            
+                            <CardContent className="space-y-4">
+                              {/* Image Section */}
+                              <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="text-xs font-medium text-gray-600">🖼️ Image</span>
+                                  {image?.success ? (
+                                    <span className="text-green-600 text-xs bg-green-50 px-2 py-0.5 rounded-full">✅</span>
+                                  ) : image ? (
+                                    <span className="text-red-600 text-xs bg-red-50 px-2 py-0.5 rounded-full">❌</span>
+                                  ) : isGeneratingImages ? (
+                                    <span className="text-blue-600 text-xs bg-blue-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                      <div className="animate-spin w-2 h-2 border border-blue-600 border-t-transparent rounded-full"></div>
+                                      Generating...
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-500 text-xs bg-gray-50 px-2 py-0.5 rounded-full">⏳</span>
+                                  )}
+                                </div>
+                                
+                                {image?.success && image.imageData ? (
+                                  <div className="relative aspect-video bg-gray-100 rounded-md overflow-hidden">
+                                    <img
+                                      src={(() => {
+                                        if (typeof image.imageData === 'string') {
+                                          return `data:image/jpeg;base64,${image.imageData}`;
+                                        } else if (typeof image.imageData === 'object' && image.imageData.image) {
+                                          return `data:${image.imageData.mimeType || 'image/jpeg'};base64,${image.imageData.image}`;
+                                        }
+                                        return '';
+                                      })()}
+                                      alt={`Generated image for ${step.title}`}
+                                      className="w-full h-full object-cover"
+                                      onError={(_e) => {
+                                        console.error('Image load error for step', step.stepNumber);
+                                      }}
+                                    />
+                                  </div>
+                                ) : image?.error ? (
+                                  <div className="aspect-video bg-red-50 rounded-md flex items-center justify-center">
+                                    <div className="text-center text-red-600 text-xs px-2">
+                                      <div className="font-medium">Generation Failed</div>
+                                      <div>{image.error}</div>
+                                    </div>
+                                  </div>
+                                ) : isGeneratingImages ? (
+                                  <div className="aspect-video bg-blue-50 rounded-md flex items-center justify-center">
+                                    <div className="text-center text-blue-600">
+                                      <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-2"></div>
+                                      <div className="text-xs">Creating image...</div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="aspect-video bg-gray-100 rounded-md flex items-center justify-center">
+                                    <div className="text-gray-400 text-xs">Click Generate to create image</div>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Audio Section */}
+                              <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="text-xs font-medium text-gray-600">🔊 Audio</span>
+                                  {audio?.success ? (
+                                    <span className="text-green-600 text-xs bg-green-50 px-2 py-0.5 rounded-full">✅</span>
+                                  ) : audio ? (
+                                    <span className="text-red-600 text-xs bg-red-50 px-2 py-0.5 rounded-full">❌</span>
+                                  ) : isGeneratingAudio ? (
+                                    <span className="text-blue-600 text-xs bg-blue-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                      <div className="animate-spin w-2 h-2 border border-blue-600 border-t-transparent rounded-full"></div>
+                                      Generating...
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-500 text-xs bg-gray-50 px-2 py-0.5 rounded-full">⏳</span>
+                                  )}
+                                </div>
+                                
+                                {audio?.success && audio.audioData ? (
+                                  <div className="bg-green-50 p-3 rounded-md">
+                                    <div className="text-center text-gray-600 text-xs italic">
+                                      &ldquo;{step.videoScript}&rdquo;
+                                    </div>
+                                  </div>
+                                ) : audio?.error ? (
+                                  <div className="bg-red-50 p-3 rounded-md">
+                                    <div className="text-center text-red-600 text-xs">
+                                      <div className="font-medium">Generation Failed</div>
+                                      <div>{audio.error}</div>
+                                    </div>
+                                  </div>
+                                ) : isGeneratingAudio ? (
+                                  <div className="bg-blue-50 p-3 rounded-md">
+                                    <div className="text-center text-blue-600">
+                                      <div className="animate-pulse text-xs">Creating audio narration...</div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="bg-gray-100 p-3 rounded-md">
+                                    <div className="text-center text-gray-400 text-xs">Click Generate to create audio</div>
+                                  </div>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            )}
+
+            {/* Video Presentation Section */}
+            {generatedImages.length > 0 && generatedAudio.length > 0 && (
+              <VideoPresentation 
+                steps={supplyChain.supplyChainSteps} 
+                images={generatedImages} 
+                audioData={generatedAudio} 
+              />
+            )}
           </>
         )}
       </div>
