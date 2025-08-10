@@ -1,6 +1,6 @@
 # Supply Chain Generator
 
-A Next.js web application that generates step-wise supply chain procedures for any product using Google's Gemini AI, with structured JSON output for video generation.
+A Next.js web application that generates step-wise supply chain procedures for any product using Google's Gemini AI, with structured JSON output for video generation and **parallel AI image generation** for each step.
 
 ## Features
 
@@ -8,7 +8,8 @@ A Next.js web application that generates step-wise supply chain procedures for a
 - AI-powered supply chain generation using Gemini Pro
 - **Structured JSON output** with detailed step-by-step information
 - **Video-ready content** with scripts, activities, and stakeholder information
-- **Download capabilities** for JSON data and video scripts
+- **🆕 Parallel AI Image Generation** for each supply chain step
+- **Download capabilities** for JSON data, video scripts, and image data
 - Responsive design that works on all devices
 - Step-by-step supply chain procedures including:
   - Raw Material Sourcing
@@ -27,6 +28,14 @@ Each supply chain step includes:
 - **Estimated Duration**: Time estimates for planning
 - **Key Stakeholders**: People and teams involved
 - **Video Script**: Ready-to-use narration script for video creation
+
+## 🆕 AI Image Generation Features
+
+- **Parallel Processing**: Generate images for all steps simultaneously
+- **Professional Quality**: Business/industrial style images suitable for presentations
+- **Context-Aware**: Each image is generated based on the specific step content
+- **Structured Output**: Complete image data with prompts and metadata
+- **Download Ready**: Export image data for use in video editing tools
 
 ## Prerequisites
 
@@ -64,16 +73,14 @@ Each supply chain step includes:
 
 ## Usage
 
-1. Enter a product name in the input field (e.g., "Smartphone", "Coffee", "T-shirt")
-2. Click "Generate Supply Chain"
-3. Wait for the AI to generate a comprehensive supply chain procedure
-4. View the structured output with separate sections for each step
-5. Download the JSON data or video scripts for further processing
+1. **Generate Supply Chain**: Enter a product name and generate the supply chain procedure
+2. **Generate Images**: Click "Generate Images" to create AI-generated images for all steps in parallel
+3. **Download Content**: Export JSON data, video scripts, and image data for further processing
+4. **View Results**: See structured output with separate sections for each step and generated images
 
 ## Output Format
 
-The application generates structured JSON data with the following structure:
-
+### Supply Chain Data
 ```json
 {
   "productName": "Product Name",
@@ -92,10 +99,29 @@ The application generates structured JSON data with the following structure:
 }
 ```
 
+### Generated Images Data
+```json
+{
+  "images": [
+    {
+      "stepNumber": 1,
+      "stage": "Stage Name",
+      "title": "Step Title",
+      "imagePrompt": "AI prompt used for generation",
+      "imageData": "Generated image data",
+      "success": true
+    }
+  ],
+  "totalSteps": 6,
+  "successfulGenerations": 6
+}
+```
+
 ## Download Options
 
 - **JSON Data**: Complete structured data for API integration
 - **Video Scripts**: Formatted text files with all video narration content
+- **🆕 Images Data**: Complete image generation data with prompts and metadata
 
 ## Technology Stack
 
@@ -103,6 +129,7 @@ The application generates structured JSON data with the following structure:
 - **Styling:** Tailwind CSS
 - **UI Components:** shadcn/ui
 - **AI:** Google Gemini Pro via @google/generative-ai
+- **🆕 Image Generation:** Gemini 2.0 Flash Exp for parallel image creation
 - **Deployment:** Ready for Vercel, Netlify, or any Next.js hosting platform
 
 ## Project Structure
@@ -111,23 +138,28 @@ The application generates structured JSON data with the following structure:
 supply-chain-generator/
 ├── src/
 │   ├── app/
-│   │   ├── api/generate/
-│   │   │   └── route.ts          # Gemini API endpoint with JSON output
-│   │   ├── globals.css           # Global styles
-│   │   └── page.tsx              # Main page with structured display
+│   │   ├── api/
+│   │   │   ├── generate/
+│   │   │   │   └── route.ts          # Supply chain generation API
+│   │   │   └── generate-images/
+│   │   │       └── route.ts          # 🆕 Parallel image generation API
+│   │   ├── globals.css               # Global styles
+│   │   └── page.tsx                  # Main page with image generation
 │   └── components/
-│       └── ui/                   # shadcn/ui components
-├── .env.local                    # Environment variables
-├── sample-output.json            # Example JSON output
-└── README.md                     # This file
+│       └── ui/                       # shadcn/ui components
+├── .env.local                        # Environment variables
+├── sample-output.json                # Example supply chain output
+├── 🆕 sample-images-output.json      # Example images output
+└── README.md                         # This file
 ```
 
 ## Customization
 
-- Modify the prompt in `src/app/api/generate/route.ts` to change the AI behavior
+- Modify the prompts in both API routes to change AI behavior
 - Update the UI components in `src/app/page.tsx`
 - Customize the JSON structure for different video generation tools
-- Adjust the styling in `src/app/globals.css`
+- Adjust image generation requirements in the image API
+- Modify the styling in `src/app/globals.css`
 
 ## Video Generation Integration
 
@@ -136,6 +168,14 @@ The structured output is designed to work with:
 - AI video generation tools (Runway, Pika Labs, Sora)
 - Automated video creation platforms
 - Content management systems
+- **🆕 Image-to-video tools** using the generated AI images
+
+## 🆕 Image Generation Workflow
+
+1. **Supply Chain Generation**: Create the structured supply chain procedure
+2. **Parallel Image Creation**: Generate professional images for all steps simultaneously
+3. **Content Assembly**: Combine supply chain data with generated images
+4. **Export & Integration**: Download all data for use in video creation tools
 
 ## Deployment
 

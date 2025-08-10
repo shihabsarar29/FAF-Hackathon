@@ -16,16 +16,9 @@ export async function POST(request: NextRequest) {
 
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    const prompt = `Generate a detailed, step-wise supply chain procedure for the product: ${productName}. 
+    const prompt = `Generate a focused supply chain procedure for the product: ${productName}. 
 
-Please provide a comprehensive supply chain that includes:
-
-1. Raw Material Sourcing
-2. Manufacturing/Production
-3. Quality Control
-4. Packaging
-5. Distribution
-6. Retail/End Consumer
+Focus on only the 3-4 most critical steps that are essential for this product's supply chain. Do not include all 6 stages unless absolutely necessary.
 
 Format the response as a JSON object with the following structure:
 {
@@ -33,18 +26,18 @@ Format the response as a JSON object with the following structure:
   "supplyChainSteps": [
     {
       "stepNumber": 1,
-      "stage": "Raw Material Sourcing",
-      "title": "Step title",
-      "description": "Detailed description of this step",
-      "keyActivities": ["Activity 1", "Activity 2", "Activity 3"],
-      "estimatedDuration": "2-3 weeks",
-      "keyStakeholders": ["Supplier", "Procurement Team"],
-      "videoScript": "Detailed script for video narration of this step"
+      "stage": "Critical Stage Name",
+      "title": "Essential step title",
+      "description": "Concise description of this critical step",
+      "keyActivities": ["Key activity 1", "Key activity 2"],
+      "estimatedDuration": "Time estimate",
+      "keyStakeholders": ["Primary stakeholder"],
+      "videoScript": "Brief script for video narration of this step"
     }
   ]
 }
 
-Make each step detailed and actionable for supply chain professionals. Each step should have enough detail to create a separate video segment.`;
+Keep each step focused and essential. Only include steps that are truly critical for this specific product's supply chain.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;

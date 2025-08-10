@@ -21,15 +21,30 @@ interface SupplyChainData {
   supplyChainSteps: SupplyChainStep[];
 }
 
+interface GeneratedImage {
+  stepNumber: number;
+  stage: string;
+  title: string;
+  imagePrompt: string;
+  imageData: unknown;
+  success: boolean;
+  error?: string;
+  modelUsed?: string;
+  isImageGenerated?: boolean;
+}
+
 export default function Home() {
   const [productName, setProductName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGeneratingImages, setIsGeneratingImages] = useState(false);
   const [supplyChain, setSupplyChain] = useState<SupplyChainData | null>(null);
+  const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
 
   const generateSupplyChain = async () => {
     if (!productName.trim()) return;
     
     setIsLoading(true);
+    setGeneratedImages([]); // Reset images when generating new supply chain
     try {
       const response = await fetch('/api/generate', {
         method: 'POST',
@@ -46,6 +61,31 @@ export default function Home() {
       setSupplyChain(null);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const generateImages = async () => {
+    if (!supplyChain) return;
+    
+    setIsGeneratingImages(true);
+    try {
+      const response = await fetch('/api/generate-images', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          steps: supplyChain.supplyChainSteps 
+        }),
+      });
+      
+      const data = await response.json();
+      setGeneratedImages(data.images || []);
+    } catch (error) {
+      console.error('Error generating images:', error);
+      setGeneratedImages([]);
+    } finally {
+      setIsGeneratingImages(false);
     }
   };
 
@@ -94,9 +134,22 @@ export default function Home() {
     URL.revokeObjectURL(url);
   };
 
+  const downloadImagesData = () => {
+    if (!generatedImages.length) return;
+    
+    const dataStr = JSON.stringify(generatedImages, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${supplyChain?.productName.replace(/\s+/g, '_') || 'product'}_generated_images.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Supply Chain Generator
@@ -152,6 +205,139 @@ export default function Home() {
                   Structured data for video generation and analysis
                 </CardDescription>
               </CardHeader>
+            </Card>
+
+            {/* Image Generation Section */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                                      Generate Images for Each Step
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={generateImages}
+                      disabled={isGeneratingImages}
+                      variant="default"
+                      size="sm"
+                    >
+                                                                      {isGeneratingImages ? 'Generating Images...' : 'Generate Images'}
+                    </Button>
+                    {generatedImages && generatedImages.length > 0 && (
+                      <Button onClick={downloadImagesData} variant="outline" size="sm">
+                        Download Images Data
+                      </Button>
+                    )}
+                  </div>
+                </CardTitle>
+                <CardDescription>
+                  Generate professional images for each supply chain step using AI
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isGeneratingImages && (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Generating images for all steps in parallel...</p>
+                  </div>
+                )}
+                
+                {generatedImages.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {generatedImages.map((image, index) => (
+                      <Card key={index} className="overflow-hidden">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">
+                            Step {image.stepNumber}: {image.stage}
+                          </CardTitle>
+                          <CardDescription className="text-xs">
+                            {image.title}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          {image.success ? (
+                            <div className="space-y-2">
+                              <div className="bg-gray-100 p-3 rounded-md min-h-[200px] flex items-center justify-center">
+                                {(() => {
+                                  const dataObj = (image.imageData && typeof image.imageData === 'object')
+                                    ? (image.imageData as { 
+                                        description?: string; 
+                                        type?: string; 
+                                        instructions?: string;
+                                        image?: string | null; 
+                                        mimeType?: string; 
+                                        text?: string 
+                                      })
+                                    : null;
+                                    
+                                  // Check for actual image first
+                                  const imgSrc = dataObj?.image
+                                    ? `data:${dataObj.mimeType || 'image/png'};base64,${dataObj.image}`
+                                    : null;
+                                  if (imgSrc) {
+                                    return (
+                                      <img
+                                        src={imgSrc}
+                                        alt={`Step ${image.stepNumber}: ${image.title}`}
+                                        className="w-full h-auto rounded-md"
+                                      />
+                                    );
+                                  }
+                                  
+                                  // Show description if available (fallback for text-only responses)
+                                  if (dataObj?.description) {
+                                    return (
+                                      <div className="text-gray-700 text-sm space-y-2 w-full">
+                                        <div className="font-medium text-orange-600 mb-2 flex items-center gap-2">
+                                          <span>⚠️</span>
+                                          <span>Image Generation Unavailable</span>
+                                        </div>
+                                        <p className="leading-relaxed text-left text-xs">
+                                          {dataObj.description}
+                                        </p>
+                                        <div className="mt-3 p-2 bg-orange-50 rounded text-xs text-orange-800">
+                                          <strong>💡 Setup Required:</strong> To generate actual images, configure your Google Cloud Project ID and ensure Vertex AI API access.
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                  
+                                  // Fallback to text or default message
+                                  const textFallback = typeof image.imageData === 'string'
+                                    ? image.imageData
+                                    : dataObj?.text || 'Image description generated successfully';
+                                    
+                                  return (
+                                    <p className="text-gray-600 text-sm text-center">
+                                      {textFallback}
+                                    </p>
+                                  );
+                                })()}
+                              </div>
+                              <details className="text-xs">
+                                <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
+                                  View Original Prompt
+                                </summary>
+                                <p className="mt-2 text-gray-700 bg-gray-50 p-2 rounded">
+                                  {image.imagePrompt}
+                                </p>
+                              </details>
+                              <div className="text-xs text-gray-500 flex justify-between">
+                                <span>Model: {image.modelUsed || 'gemini-pro'}</span>
+                                <span>{image.isImageGenerated ? '🖼️ Image' : '📝 Description'}</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="bg-red-50 p-3 rounded-md min-h-[200px] flex items-center justify-center">
+                              <p className="text-red-600 text-sm text-center">
+                                Failed to generate image
+                              </p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
             </Card>
 
             <div className="grid gap-6">

@@ -1,0 +1,54 @@
+{
+  "images": [
+    {
+      "stepNumber": 1,
+      "stage": "Raw Material Sourcing",
+      "title": "Component Procurement",
+      "imagePrompt": "Generate a professional, high-quality image that represents the supply chain step: \"Raw Material Sourcing - Component Procurement\".\n\nThis step involves: Source high-quality materials including rare earth metals, glass, plastics, and electronic components from certified suppliers worldwide. Establish long-term contracts with reliable vendors to ensure consistent quality and supply chain stability.\n\nKey activities include: Identify and qualify suppliers, Negotiate pricing and terms, Conduct quality assessments, Establish supply agreements, Monitor supplier performance\n\nRequirements:\n- Professional business/industrial style\n- Clear visual representation of the supply chain concept\n- High contrast and readable\n- Suitable for business presentations and videos\n- No text overlays or watermarks\n- Realistic and professional appearance\n\nThe image should clearly convey the concept of raw material sourcing in a supply chain context.",
+      "imageData": "Generated image data would appear here",
+      "success": true
+    },
+    {
+      "stepNumber": 2,
+      "stage": "Manufacturing/Production",
+      "title": "Assembly and Testing",
+      "imagePrompt": "Generate a professional, high-quality image that represents the supply chain step: \"Manufacturing/Production - Assembly and Testing\".\n\nThis step involves: Assemble smartphone components in automated production lines with precision robotics. Conduct comprehensive testing at each stage including functionality, durability, and performance benchmarks. Implement quality control checkpoints throughout the assembly process.\n\nKey activities include: Component assembly, Quality testing, Performance validation, Defect detection, Production line optimization\n\nRequirements:\n- Professional business/industrial style\n- Clear visual representation of the supply chain concept\n- High contrast and readable\n- Suitable for business presentations and videos\n- No text overlays or watermarks\n- Realistic and professional appearance\n\nThe image should clearly convey the concept of manufacturing/production in a supply chain context.",
+      "imageData": "Generated image data would appear here",
+      "success": true
+    },
+    {
+      "stepNumber": 3,
+      "stage": "Quality Control",
+      "title": "Comprehensive Testing",
+      "imagePrompt": "Generate a professional, high-quality image that represents the supply chain step: \"Quality Control - Comprehensive Testing\".\n\nThis step involves: Implement multi-stage quality control protocols including stress testing, environmental testing, and user experience validation. Use advanced diagnostic tools and automated testing systems to ensure every device meets quality standards.\n\nKey activities include: Stress testing, Environmental testing, User experience validation, Defect analysis, Quality reporting\n\nRequirements:\n- Professional business/industrial style\n- Clear visual representation of the supply chain concept\n- High contrast and readable\n- Suitable for business presentations and videos\n- No text overlays or watermarks\n- Realistic and professional appearance\n\nThe image should clearly convey the concept of quality control in a supply chain context.",
+      "imageData": "Generated image data would appear here",
+      "success": true
+    },
+    {
+      "stepNumber": 4,
+      "stage": "Packaging",
+      "title": "Secure Packaging and Documentation",
+      "imagePrompt": "Generate a professional, high-quality image that represents the supply chain step: \"Packaging - Secure Packaging and Documentation\".\n\nThis step involves: Package smartphones in protective materials with comprehensive documentation including user manuals, warranty information, and regulatory compliance certificates. Implement anti-counterfeiting measures and tracking systems.\n\nKey activities include: Protective packaging, Documentation preparation, Anti-counterfeiting measures, Tracking system implementation, Packaging quality control\n\nRequirements:\n- Professional business/industrial style\n- Clear visual representation of the supply chain concept\n- High contrast and readable\n- Suitable for business presentations and videos\n- No text overlays or watermarks\n- Realistic and professional appearance\n\nThe image should clearly convey the concept of packaging in a supply chain context.",
+      "imageData": "Generated image data would appear here",
+      "success": true
+    },
+    {
+      "stepNumber": 5,
+      "stage": "Distribution",
+      "title": "Global Logistics and Shipping",
+      "imagePrompt": "Generate a professional, high-quality image that represents the supply chain step: \"Distribution - Global Logistics and Shipping\".\n\nThis step involves: Coordinate global distribution network using air, sea, and land transportation. Implement real-time tracking systems and optimize routes for efficiency. Ensure compliance with international shipping regulations and customs requirements.\n\nKey activities include: Route optimization, Carrier selection, Customs compliance, Real-time tracking, Delivery coordination\n\nRequirements:\n- Professional business/industrial style\n- Clear visual representation of the supply chain concept\n- High contrast and readable\n- Suitable for business presentations and videos\n- No text overlays or watermarks\n- Realistic and professional appearance\n\nThe image should clearly convey the concept of distribution in a supply chain context.",
+      "imageData": "Generated image data would appear here",
+      "success": true
+    },
+    {
+      "stepNumber": 6,
+      "stage": "Retail/End Consumer",
+      "title": "Customer Experience and Support",
+      "imagePrompt": "Generate a professional, high-quality image that represents the supply chain step: \"Retail/End Consumer - Customer Experience and Support\".\n\nThis step involves: Deliver smartphones through authorized retail channels with comprehensive customer support. Provide post-sale services including technical support, warranty claims, and software updates. Monitor customer satisfaction and feedback.\n\nKey activities include: Retail distribution, Customer support, Technical assistance, Warranty services, Software updates\n\nRequirements:\n- Professional business/industrial style\n- Clear visual representation of the supply chain concept\n- High contrast and readable\n- Suitable for business presentations and videos\n- No text overlays or watermarks\n- Realistic and professional appearance\n\nThe image should clearly convey the concept of retail/end consumer in a supply chain context.",
+      "imageData": "Generated image data would appear here",
+      "success": true
+    }
+  ],
+  "totalSteps": 6,
+  "successfulGenerations": 6
+} 
