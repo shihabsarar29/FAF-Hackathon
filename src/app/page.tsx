@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useSpeech } from 'react-text-to-speech';
 
 interface SupplyChainStep {
   stepNumber: number;
@@ -26,6 +27,207 @@ interface GeneratedImage {
   error?: string;
   modelUsed?: string;
   isImageGenerated?: boolean;
+}
+
+// Component for individual step with text-to-speech
+function StepCard({ step }: { step: SupplyChainStep }) {
+  const {
+    Text,
+    speechStatus,
+    isInQueue,
+    start,
+    pause,
+    stop,
+  } = useSpeech({ 
+    text: step.videoScript || `Step ${step.stepNumber}: ${step.title}. ${step.description || ''}`,
+    rate: 1,
+    pitch: 1,
+    volume: 1,
+    lang: 'en-US',
+  });
+
+  return (
+    <Card className="border-l-4 border-l-blue-500">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-3">
+          <span className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+            {step.stepNumber}
+          </span>
+          <div>
+            <div className="text-lg">{step.stage}</div>
+            <div className="text-sm text-gray-600 font-normal">{step.title}</div>
+          </div>
+        </CardTitle>
+        <CardDescription>
+          {step.isDetailed ? 'Step details loaded' : 'Loading details...'}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {step.isDetailed ? (
+          <div>
+            <h4 className="font-semibold mb-2">Description:</h4>
+            <p className="text-gray-700">{step.description}</p>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 py-4">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+            <p className="text-gray-600">Loading detailed information...</p>
+          </div>
+        )}
+        
+        {step.isDetailed && (
+          <>
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold mb-2">Image Generation Prompt:</h4>
+                <div className="bg-blue-50 p-3 rounded-md">
+                  <p className="text-blue-800 text-sm font-mono">{step.imagePrompt}</p>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold mb-2">Video Generation Prompt:</h4>
+                <div className="bg-green-50 p-3 rounded-md">
+                  <p className="text-green-800 text-sm font-mono">{step.videoGenPrompt}</p>
+                </div>
+              </div>
+              
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-semibold">Video Script:</h4>
+                  <div className="flex gap-2">
+                    {speechStatus !== "started" ? (
+                      <Button 
+                        onClick={start} 
+                        size="sm" 
+                        variant="outline"
+                        className="text-xs"
+                        disabled={!step.videoScript}
+                      >
+                        🔊 Play Audio
+                      </Button>
+                    ) : (
+                      <Button 
+                        onClick={pause} 
+                        size="sm" 
+                        variant="outline"
+                        className="text-xs"
+                      >
+                        ⏸️ Pause
+                      </Button>
+                    )}
+                    <Button 
+                      onClick={stop} 
+                      size="sm" 
+                      variant="outline"
+                      className="text-xs"
+                      disabled={!isInQueue && speechStatus !== "started"}
+                    >
+                      ⏹️ Stop
+                    </Button>
+                  </div>
+                </div>
+                <div className="bg-gray-50 p-3 rounded-md">
+                  <Text />
+                  {speechStatus === "started" && (
+                    <div className="mt-2 text-xs text-blue-600 flex items-center gap-1">
+                      <div className="animate-pulse w-2 h-2 bg-blue-600 rounded-full"></div>
+                      Playing audio...
+                    </div>
+                  )}
+                  {isInQueue && speechStatus !== "started" && (
+                    <div className="mt-2 text-xs text-orange-600">
+                      In queue...
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// Component for playing all scripts in sequence
+function PlayAllScripts({ steps }: { steps: SupplyChainStep[] }) {
+  const allScripts = steps
+    .filter(step => step.isDetailed && step.videoScript)
+    .map(step => `Step ${step.stepNumber}: ${step.stage}. ${step.videoScript}`)
+    .join('. ');
+
+  const {
+    speechStatus,
+    isInQueue,
+    start,
+    pause,
+    stop,
+  } = useSpeech({ 
+    text: allScripts,
+    rate: 1,
+    pitch: 1,
+    volume: 1,
+    lang: 'en-US',
+  });
+
+  const hasScripts = steps.some(step => step.isDetailed && step.videoScript);
+
+  if (!hasScripts) {
+    return null;
+  }
+
+  return (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          🎧 Audio Narration
+          <div className="flex gap-2">
+            {speechStatus !== "started" ? (
+              <Button 
+                onClick={start} 
+                variant="default" 
+                size="sm"
+                className="bg-green-600 hover:bg-green-700"
+              >
+                🔊 Play All Scripts
+              </Button>
+            ) : (
+              <Button 
+                onClick={pause} 
+                variant="outline" 
+                size="sm"
+              >
+                ⏸️ Pause All
+              </Button>
+            )}
+            <Button 
+              onClick={stop} 
+              variant="outline" 
+              size="sm"
+              disabled={!isInQueue && speechStatus !== "started"}
+            >
+              ⏹️ Stop All
+            </Button>
+          </div>
+        </CardTitle>
+        <CardDescription>
+          Listen to all video scripts narrated in sequence
+          {speechStatus === "started" && (
+            <div className="mt-2 text-green-600 flex items-center gap-1">
+              <div className="animate-pulse w-2 h-2 bg-green-600 rounded-full"></div>
+              Playing all scripts...
+            </div>
+          )}
+          {isInQueue && speechStatus !== "started" && (
+            <div className="mt-2 text-orange-600">
+              Audio in queue...
+            </div>
+          )}
+        </CardDescription>
+      </CardHeader>
+    </Card>
+  );
 }
 
 export default function Home() {
@@ -248,9 +450,9 @@ export default function Home() {
                     <Button onClick={downloadJSON} variant="outline" size="sm">
                       Download JSON
                     </Button>
-                                      <Button onClick={downloadVideoScripts} variant="outline" size="sm">
-                    Download All Details
-                  </Button>
+                    <Button onClick={downloadVideoScripts} variant="outline" size="sm">
+                      Download All Details
+                    </Button>
                   </div>
                 </CardTitle>
                 <CardDescription>
@@ -392,64 +594,14 @@ export default function Home() {
               </CardContent>
             </Card>
 
+            <PlayAllScripts steps={supplyChain.supplyChainSteps} />
+
             <div className="grid gap-6">
               {supplyChain.supplyChainSteps.map((step, index) => (
-                <Card key={`step-${index}`} className="border-l-4 border-l-blue-500">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3">
-                      <span className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
-                        {step.stepNumber}
-                      </span>
-                      <div>
-                        <div className="text-lg">{step.stage}</div>
-                        <div className="text-sm text-gray-600 font-normal">{step.title}</div>
-                      </div>
-                    </CardTitle>
-                    <CardDescription>
-                      {step.isDetailed ? 'Step details loaded' : 'Loading details...'}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {step.isDetailed ? (
-                      <div>
-                        <h4 className="font-semibold mb-2">Description:</h4>
-                        <p className="text-gray-700">{step.description}</p>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-3 py-4">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                        <p className="text-gray-600">Loading detailed information...</p>
-                      </div>
-                    )}
-                    
-                    {step.isDetailed && (
-                      <>
-                        <div className="space-y-4">
-                          <div>
-                            <h4 className="font-semibold mb-2">Image Generation Prompt:</h4>
-                            <div className="bg-blue-50 p-3 rounded-md">
-                              <p className="text-blue-800 text-sm font-mono">{step.imagePrompt}</p>
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <h4 className="font-semibold mb-2">Video Generation Prompt:</h4>
-                            <div className="bg-green-50 p-3 rounded-md">
-                              <p className="text-green-800 text-sm font-mono">{step.videoGenPrompt}</p>
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <h4 className="font-semibold mb-2">Video Script:</h4>
-                            <div className="bg-gray-50 p-3 rounded-md">
-                              <p className="text-gray-700 text-sm">{step.videoScript}</p>
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
+                <StepCard 
+                  key={`step-${index}`} 
+                  step={step} 
+                />
               ))}
             </div>
 
