@@ -86,7 +86,7 @@ function StepCard({ step }: { step: SupplyChainStep }) {
     <Card className="overflow-hidden">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-3">
-          <span className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+          <span className="bg-black text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
             {step.stepNumber}
           </span>
           <div>
@@ -765,7 +765,7 @@ export default function Home() {
             <div></div>
             <div className="text-center">
               <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                Product Impact Explorer
+                Product Knowledge Platform
               </h1>
               <p className="text-lg text-gray-600">
                 Discover how products are made, their environmental impact, and health effects with AI-powered insights
@@ -774,7 +774,7 @@ export default function Home() {
             <Link href="/story">
               <Button variant="outline" className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4" />
-                Our Story
+                Story
               </Button>
             </Link>
           </div>

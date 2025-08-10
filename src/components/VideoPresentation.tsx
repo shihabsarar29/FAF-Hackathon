@@ -515,11 +515,11 @@ export default function VideoPresentation({ items, images, audioData, contentTyp
         <div className="space-y-4">
           <div className="flex items-center justify-center gap-4">
             {!isPlaying ? (
-              <Button onClick={handlePlay} className="bg-green-600 hover:bg-green-700">
+              <Button onClick={handlePlay} className="bg-black hover:bg-gray-800">
                 Play Presentation
               </Button>
             ) : isPaused ? (
-              <Button onClick={handleResume} className="bg-green-600 hover:bg-green-700">
+              <Button onClick={handleResume} className="bg-black hover:bg-gray-800">
                 Resume
               </Button>
             ) : (
@@ -555,8 +555,8 @@ export default function VideoPresentation({ items, images, audioData, contentTyp
                 onClick={() => handleStepClick(index)}
                 className={`p-2 text-xs rounded border text-left ${
                   index === currentStep
-                    ? 'bg-blue-100 border-blue-300 text-blue-800'
-                    : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                    ? 'bg-black border-black text-white'
+                    : 'bg-gray-50 border-gray-200 hover:bg-black hover:text-white'
                 }`}
               >
                 <div className="font-semibold">{contentType === 'supply-chain' ? 'Step' : 'Effect'} {getItemId(item)}</div>

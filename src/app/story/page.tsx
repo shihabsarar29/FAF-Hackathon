@@ -19,7 +19,7 @@ export default function StoryPage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-4xl font-bold text-gray-900">Our Story</h1>
+            <h1 className="text-4xl font-bold text-gray-900">Story</h1>
             <p className="text-lg text-gray-600 mt-2">Building the future of interactive learning</p>
           </div>
         </div>
@@ -36,9 +36,25 @@ export default function StoryPage() {
             <p className="mb-4">
               I&apos;m building a video-based learning platform where users can explore a product&apos;s supply chain, environmental impact, and health effects—all in an interactive, gamified way. Think Alchemy, where players combine &ldquo;elements&rdquo; to create products, or multiplayer quizzes with leaderboards to keep engagement high.
             </p>
-            <p>
+            <p className="mb-4">
+              Instead of social media reels, people will be checking out product reels—discovering the fascinating stories behind everyday items through engaging, bite-sized video content that educates while it entertains.
+            </p>
+            <p className="mb-6">
               Initially, I planned to generate videos using Veo 3, but with costs ranging from <strong>$15–$45 for a single one-minute video</strong>, mass adoption wasn&apos;t realistic. Video generation will eventually become cheaper, but I didn&apos;t want to wait. Instead, I designed a cost-optimized architecture that works now and can seamlessly upgrade to new tech later.
             </p>
+            
+            <div className="aspect-video w-full">
+              <iframe
+                width="100%"
+                height="100%"
+                src="https://www.youtube.com/embed/uWbxFEH-VUc"
+                title="Product Knowledge Platform Demo"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="rounded-lg"
+              ></iframe>
+            </div>
           </CardContent>
         </Card>
 
@@ -161,7 +177,7 @@ export default function StoryPage() {
           <CardContent className="text-center py-8">
             <h3 className="text-2xl font-bold mb-4">Ready to Explore?</h3>
             <p className="text-lg mb-6 opacity-90">
-              Experience the future of product learning today. Try our Product Impact Explorer and see how we make complex supply chains accessible and engaging.
+              Experience the future of product learning today. Try our Product Knowledge Platform and see how we make complex supply chains accessible and engaging.
             </p>
             <Link href="/">
               <Button size="lg" variant="secondary">

@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Product Impact Explorer",
+  title: "Product Knowledge Platform",
   description: "Discover how products are made, their environmental impact, and health effects with AI-powered insights",
 };
 
