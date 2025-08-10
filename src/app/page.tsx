@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useSpeech } from 'react-text-to-speech';
 import React from 'react'; // Added for React.useEffect
+import { useGeminiAudio } from '@/hooks/useGeminiAudio';
 
 interface SupplyChainStep {
   stepNumber: number;
@@ -23,28 +23,41 @@ interface GeneratedImage {
   stage: string;
   title: string;
   imagePrompt: string;
-  imageData: unknown;
+  imageData: {
+    description?: string;
+    type?: string;
+    instructions?: string;
+    text?: string;
+    image?: string;
+    mimeType?: string;
+  };
   success: boolean;
   error?: string;
   modelUsed?: string;
   isImageGenerated?: boolean;
 }
 
+interface GeneratedAudio {
+  stepNumber: number;
+  success: boolean;
+  audioData?: string;
+  mimeType?: string;
+  error?: string;
+  generationTime?: number;
+}
+
 // Component for individual step with text-to-speech
 function StepCard({ step }: { step: SupplyChainStep }) {
   const {
-    Text,
-    speechStatus,
-    isInQueue,
-    start,
-    pause,
-    stop,
-  } = useSpeech({ 
+    audioStatus,
+    isLoading,
+    error,
+    start: startAudio,
+    pause: pauseAudio,
+    stop: stopAudio,
+    resume: resumeAudio,
+  } = useGeminiAudio({ 
     text: step.videoScript || `Step ${step.stepNumber}: ${step.title}. ${step.description || ''}`,
-    rate: 1,
-    pitch: 1,
-    volume: 1,
-    lang: 'en-US',
   });
 
   return (
@@ -97,48 +110,62 @@ function StepCard({ step }: { step: SupplyChainStep }) {
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-semibold">Video Script:</h4>
                   <div className="flex gap-2">
-                    {speechStatus !== "started" ? (
+                    {audioStatus === "idle" || audioStatus === "ended" ? (
                       <Button 
-                        onClick={start} 
+                        onClick={startAudio} 
                         size="sm" 
                         variant="outline"
                         className="text-xs"
-                        disabled={!step.videoScript}
+                        disabled={!step.videoScript || isLoading}
                       >
-                        🔊 Play Audio
+                        {isLoading ? "⏳ Loading..." : "🔊 Play Audio"}
                       </Button>
-                    ) : (
+                    ) : audioStatus === "playing" ? (
                       <Button 
-                        onClick={pause} 
+                        onClick={pauseAudio} 
                         size="sm" 
                         variant="outline"
                         className="text-xs"
                       >
                         ⏸️ Pause
                       </Button>
-                    )}
+                    ) : audioStatus === "paused" ? (
+                      <Button 
+                        onClick={resumeAudio} 
+                        size="sm" 
+                        variant="outline"
+                        className="text-xs"
+                      >
+                        ▶️ Resume
+                      </Button>
+                    ) : null}
                     <Button 
-                      onClick={stop} 
+                      onClick={stopAudio} 
                       size="sm" 
                       variant="outline"
                       className="text-xs"
-                      disabled={!isInQueue && speechStatus !== "started"}
+                      disabled={audioStatus === "idle"}
                     >
                       ⏹️ Stop
                     </Button>
                   </div>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-md">
-                  <Text />
-                  {speechStatus === "started" && (
+                  <p className="text-gray-700 text-sm">{step.videoScript}</p>
+                  {audioStatus === "playing" && (
                     <div className="mt-2 text-xs text-blue-600 flex items-center gap-1">
                       <div className="animate-pulse w-2 h-2 bg-blue-600 rounded-full"></div>
                       Playing audio...
                     </div>
                   )}
-                  {isInQueue && speechStatus !== "started" && (
+                  {isLoading && (
                     <div className="mt-2 text-xs text-orange-600">
-                      In queue...
+                      Generating audio...
+                    </div>
+                  )}
+                  {error && (
+                    <div className="mt-2 text-xs text-red-600">
+                      Error: {error}
                     </div>
                   )}
                 </div>
@@ -159,18 +186,14 @@ function PlayAllScripts({ steps }: { steps: SupplyChainStep[] }) {
     .join('. ');
 
   const {
-    speechStatus,
-    isInQueue,
-    start,
-    pause,
-    stop,
-  } = useSpeech({ 
-    text: allScripts,
-    rate: 1,
-    pitch: 1,
-    volume: 1,
-    lang: 'en-US',
-  });
+    audioStatus,
+    isLoading,
+    error,
+    start: startAudio,
+    pause: pauseAudio,
+    stop: stopAudio,
+    resume: resumeAudio,
+  } = useGeminiAudio({ text: allScripts });
 
   const hasScripts = steps.some(step => step.isDetailed && step.videoScript);
 
@@ -184,29 +207,39 @@ function PlayAllScripts({ steps }: { steps: SupplyChainStep[] }) {
         <CardTitle className="flex items-center justify-between">
           🎧 Audio Narration
           <div className="flex gap-2">
-            {speechStatus !== "started" ? (
+            {audioStatus === "idle" || audioStatus === "ended" ? (
               <Button 
-                onClick={start} 
+                onClick={startAudio} 
                 variant="default" 
                 size="sm"
                 className="bg-green-600 hover:bg-green-700"
+                disabled={isLoading}
               >
-                🔊 Play All Scripts
+                {isLoading ? "⏳ Loading..." : "🔊 Play All Scripts"}
               </Button>
-            ) : (
+            ) : audioStatus === "playing" ? (
               <Button 
-                onClick={pause} 
+                onClick={pauseAudio} 
                 variant="outline" 
                 size="sm"
               >
                 ⏸️ Pause All
               </Button>
-            )}
+            ) : audioStatus === "paused" ? (
+              <Button 
+                onClick={resumeAudio} 
+                variant="default" 
+                size="sm"
+                className="bg-green-600 hover:bg-green-700"
+              >
+                ▶️ Resume All
+              </Button>
+            ) : null}
             <Button 
-              onClick={stop} 
+              onClick={stopAudio} 
               variant="outline" 
               size="sm"
-              disabled={!isInQueue && speechStatus !== "started"}
+              disabled={audioStatus === "idle"}
             >
               ⏹️ Stop All
             </Button>
@@ -214,15 +247,20 @@ function PlayAllScripts({ steps }: { steps: SupplyChainStep[] }) {
         </CardTitle>
         <CardDescription>
           Listen to all video scripts narrated in sequence
-          {speechStatus === "started" && (
+          {audioStatus === "playing" && (
             <div className="mt-2 text-green-600 flex items-center gap-1">
               <div className="animate-pulse w-2 h-2 bg-green-600 rounded-full"></div>
               Playing all scripts...
             </div>
           )}
-          {isInQueue && speechStatus !== "started" && (
+          {isLoading && (
             <div className="mt-2 text-orange-600">
-              Audio in queue...
+              Generating audio...
+            </div>
+          )}
+          {error && (
+            <div className="mt-2 text-red-600">
+              Error: {error}
             </div>
           )}
         </CardDescription>
@@ -232,282 +270,452 @@ function PlayAllScripts({ steps }: { steps: SupplyChainStep[] }) {
 }
 
 // Video-like presentation component
-function VideoPresentation({ steps, images }: { steps: SupplyChainStep[]; images: GeneratedImage[] }) {
+function VideoPresentation({ steps, images, audioData }: { 
+  steps: SupplyChainStep[]; 
+  images: GeneratedImage[];
+  audioData: GeneratedAudio[];
+}) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [stepStartTime, setStepStartTime] = useState<number>(0);
-  const previousSpeechStatusRef = React.useRef<string>('');
+  const previousAudioStatusRef = React.useRef<string>('idle');
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+  const [audioStatus, setAudioStatus] = useState<'idle' | 'loading' | 'playing' | 'paused' | 'ended' | 'error'>('idle');
+  const [audioError, setAudioError] = useState<string | null>(null);
+  const currentAudioStatusRef = React.useRef<string>('idle');
 
-  // Get steps that have both images and scripts
+  // Get steps that have both images and audio
   const presentationSteps = steps.filter(step => {
     const hasImage = images.some(img => img.stepNumber === step.stepNumber && img.success);
-    return step.isDetailed && step.videoScript && hasImage;
+    const hasAudio = audioData.some(audio => audio.stepNumber === step.stepNumber && audio.success);
+    return step.isDetailed && step.videoScript && hasImage && hasAudio;
   });
 
-  // Current step speech hook
+  // Get current step data
   const currentStepData = presentationSteps[currentStep];
-  const {
-    speechStatus,
-    start: startSpeech,
-    pause: pauseSpeech,
-    stop: stopSpeech,
-  } = useSpeech({
-    text: currentStepData?.videoScript || '',
-    rate: 1,
-    pitch: 1,
-    volume: 1,
-    lang: 'en-US',
-  });
+  const currentImage = images.find(img => img.stepNumber === currentStepData?.stepNumber);
+  const currentAudio = audioData.find(audio => audio.stepNumber === currentStepData?.stepNumber);
 
-  // Detect when speech finishes and advance to next step
+  // Function to play pre-generated audio
+  const playCurrentStepAudio = React.useCallback(async () => {
+    if (!currentAudio || !currentAudio.success || !currentAudio.audioData) {
+      console.error('No audio data available for current step:', currentStepData?.stepNumber);
+      setAudioStatus('error');
+      setAudioError('No audio data available');
+      return;
+    }
+
+    // Function to convert PCM to WAV (moved inside useCallback)
+    const pcmToWav = (pcmData: ArrayBuffer, sampleRate: number = 24000, channels: number = 1): ArrayBuffer => {
+      const pcmLength = pcmData.byteLength;
+      const wavLength = 44 + pcmLength;
+      
+      const buffer = new ArrayBuffer(wavLength);
+      const view = new DataView(buffer);
+      
+      const writeString = (offset: number, string: string) => {
+        for (let i = 0; i < string.length; i++) {
+          view.setUint8(offset + i, string.charCodeAt(i));
+        }
+      };
+      
+      writeString(0, 'RIFF');
+      view.setUint32(4, wavLength - 8, true);
+      writeString(8, 'WAVE');
+      writeString(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, channels, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * channels * 2, true);
+      view.setUint16(32, channels * 2, true);
+      view.setUint16(34, 16, true);
+      writeString(36, 'data');
+      view.setUint32(40, pcmLength, true);
+      
+      const pcmView = new Uint8Array(pcmData);
+      const wavView = new Uint8Array(buffer);
+      wavView.set(pcmView, 44);
+      
+      return buffer;
+    };
+
+    try {
+      setAudioStatus('loading');
+      setAudioError(null);
+      console.log(`Loading audio for step ${currentStepData?.stepNumber}...`);
+
+      // Clean up previous audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        // Remove all event listeners
+        audioRef.current.removeEventListener('play', () => {});
+        audioRef.current.removeEventListener('pause', () => {});
+        audioRef.current.removeEventListener('ended', () => {});
+        audioRef.current.removeEventListener('error', () => {});
+        audioRef.current = null;
+      }
+
+      // Convert base64 to binary data
+      const binaryData = atob(currentAudio.audioData);
+      const bytes = new Uint8Array(binaryData.length);
+      for (let i = 0; i < binaryData.length; i++) {
+        bytes[i] = binaryData.charCodeAt(i);
+      }
+
+      let audioUrl: string;
+      
+      if (currentAudio.mimeType && currentAudio.mimeType.includes('pcm')) {
+        console.log('Converting pre-generated PCM to WAV...');
+        const wavBuffer = pcmToWav(bytes.buffer, 24000, 1);
+        const blob = new Blob([wavBuffer], { type: 'audio/wav' });
+        audioUrl = URL.createObjectURL(blob);
+      } else {
+        const blob = new Blob([bytes], { type: currentAudio.mimeType || 'audio/wav' });
+        audioUrl = URL.createObjectURL(blob);
+      }
+
+      // Create new audio element
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+
+      // Set up event listeners with proper cleanup
+      const handlePlay = () => {
+        console.log(`[AUDIO] Audio started playing for step ${currentStepData?.stepNumber}`);
+        setAudioStatus('playing');
+        currentAudioStatusRef.current = 'playing';
+      };
+      
+      const handlePause = () => {
+        console.log(`[AUDIO] Audio paused for step ${currentStepData?.stepNumber}`);
+        setAudioStatus('paused');
+        currentAudioStatusRef.current = 'paused';
+      };
+      
+      const handleEnded = () => {
+        console.log(`[AUDIO] Audio ended for step ${currentStepData?.stepNumber}`);
+        setAudioStatus('ended');
+        currentAudioStatusRef.current = 'ended';
+        // Clean up blob URL to prevent memory leaks
+        URL.revokeObjectURL(audioUrl);
+      };
+      
+      const handleTimeUpdate = () => {
+        if (audio.currentTime > 0 && audio.duration > 0) {
+          const progress = (audio.currentTime / audio.duration) * 100;
+          const timeLeft = audio.duration - audio.currentTime;
+          
+          // Log progress when near the end
+          if (progress > 95) {
+            console.log(`[AUDIO] Audio ${progress.toFixed(1)}% complete for step ${currentStepData?.stepNumber}, ${timeLeft.toFixed(1)}s left`);
+          }
+          
+          // Backup mechanism: if very close to end and not already ended
+          if (timeLeft < 0.1 && currentAudioStatusRef.current === 'playing') {
+            console.log(`[AUDIO] Audio almost finished (${timeLeft.toFixed(3)}s left), triggering end manually`);
+            handleEnded();
+          }
+        }
+      };
+      
+      const handleLoadedData = () => {
+        console.log(`[AUDIO] Audio loaded for step ${currentStepData?.stepNumber}, duration: ${audio.duration}s`);
+      };
+      
+      const handleError = (e: Event) => {
+        console.error('[AUDIO] Audio playback error for step', currentStepData?.stepNumber, ':', e);
+        const audioElement = e.target as HTMLAudioElement;
+        if (audioElement && audioElement.error) {
+          console.error('[AUDIO] Audio error details:', audioElement.error);
+        }
+        setAudioError('Audio playback failed');
+        setAudioStatus('error');
+        URL.revokeObjectURL(audioUrl);
+      };
+
+      // Add all event listeners
+      audio.addEventListener('play', handlePlay);
+      audio.addEventListener('pause', handlePause);
+      audio.addEventListener('ended', handleEnded);
+      audio.addEventListener('timeupdate', handleTimeUpdate);
+      audio.addEventListener('loadeddata', handleLoadedData);
+      audio.addEventListener('error', handleError);
+
+      // Ensure audio can play through
+      audio.preload = 'auto';
+      audio.load(); // Force load the audio
+
+      // Start playback
+      console.log(`Starting audio playback for step ${currentStepData?.stepNumber}...`);
+      await audio.play();
+    } catch (error) {
+      console.error('Error playing audio for step', currentStepData?.stepNumber, ':', error);
+      setAudioError(error instanceof Error ? error.message : 'Failed to play audio');
+      setAudioStatus('error');
+    }
+  }, [currentAudio, currentStepData]);
+
+  // Detect when audio finishes and advance to next step
   React.useEffect(() => {
-    // Check if speech just finished (transitioned from any active state to inactive)
-    const speechJustFinished = (
-      (previousSpeechStatusRef.current === "started" || previousSpeechStatusRef.current === "paused") && 
-      (speechStatus !== "started" && speechStatus !== "paused")
+    const prevStatus = previousAudioStatusRef.current;
+    const currStatus = audioStatus;
+    
+    console.log(`[AUTO-ADVANCE] Audio status: ${prevStatus} → ${currStatus} | Step: ${currentStep + 1}/${presentationSteps.length} | Playing: ${isPlaying} | Paused: ${isPaused}`);
+    
+    const audioJustFinished = (
+      (prevStatus === "playing" && currStatus === "ended") ||
+      (prevStatus === "paused" && currStatus === "ended") ||
+      (currStatus === "ended" && (prevStatus === "playing" || prevStatus === "paused"))
     );
 
-    if (speechJustFinished && isPlaying && !isPaused) {
-      console.log(`Speech finished for step ${currentStep + 1}, status changed from ${previousSpeechStatusRef.current} to ${speechStatus}`);
+    if (audioJustFinished) {
+      console.log(`[AUTO-ADVANCE] Audio finished detected for step ${currentStep + 1} (${prevStatus} → ${currStatus})`);
       
-      // Add a small delay to ensure speech has fully completed
-      setTimeout(() => {
-        if (currentStep < presentationSteps.length - 1) {
-          console.log(`Advancing to step ${currentStep + 2}`);
-          setCurrentStep(prev => prev + 1);
-        } else {
-          console.log('Presentation finished - reached last step');
-          setIsPlaying(false);
-          setCurrentStep(0);
-        }
-      }, 1000); // 1 second delay to ensure clean transition
+      if (isPlaying && !isPaused) {
+        console.log(`[AUTO-ADVANCE] Conditions met, advancing...`);
+        
+        // Use a shorter timeout for more responsive advancement
+        setTimeout(() => {
+          setCurrentStep(prevStep => {
+            const nextStep = prevStep + 1;
+            if (prevStep < presentationSteps.length - 1) {
+              console.log(`[AUTO-ADVANCE] Advancing from step ${prevStep + 1} to step ${nextStep + 1}`);
+              return nextStep;
+            } else {
+              console.log('[AUTO-ADVANCE] Presentation finished - reached last step');
+              setIsPlaying(false);
+              return 0;
+            }
+          });
+        }, 200); // Reduced timeout for faster response
+      } else {
+        console.log(`[AUTO-ADVANCE] Not advancing - isPlaying: ${isPlaying}, isPaused: ${isPaused}`);
+      }
     }
 
-    // Update the ref with current status
-    previousSpeechStatusRef.current = speechStatus;
-  }, [speechStatus, currentStep, presentationSteps.length, isPlaying, isPaused]);
+    // Always update the ref at the end
+    previousAudioStatusRef.current = currStatus;
+  }, [audioStatus, presentationSteps.length, isPlaying, isPaused]);
 
-  // Auto-start speech when step changes during playback
+  // Play audio when current step changes during presentation
   React.useEffect(() => {
-    if (isPlaying && !isPaused && speechStatus !== "started" && currentStepData) {
-      console.log(`Starting speech for step ${currentStep + 1}`);
-      setStepStartTime(Date.now());
-      const timer = setTimeout(() => startSpeech(), 500);
-      return () => clearTimeout(timer);
+    console.log(`[STEP-CHANGE] Step changed to ${currentStep + 1}, isPlaying: ${isPlaying}, isPaused: ${isPaused}, hasStepData: ${!!currentStepData}`);
+    
+    if (isPlaying && !isPaused && currentStepData) {
+      console.log(`[STEP-CHANGE] Playing audio for step ${currentStep + 1}: "${currentStepData.videoScript?.substring(0, 50)}..."`);
+      // Reset audio status before playing new audio
+      setAudioStatus('idle');
+      setAudioError(null);
+      // Small delay to ensure state is updated
+      setTimeout(() => {
+        playCurrentStepAudio();
+      }, 100);
+    } else {
+      console.log(`[STEP-CHANGE] Not playing audio - conditions not met`);
     }
-  }, [currentStep, isPlaying, isPaused, currentStepData, speechStatus, startSpeech]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep, isPlaying, isPaused, currentStepData]);
 
-  // Get current image
-  const currentImage = currentStepData ? 
-    images.find(img => img.stepNumber === currentStepData.stepNumber) : null;
+  // Debug effect to log step changes
+  React.useEffect(() => {
+    console.log(`[DEBUG] Current state - Step: ${currentStep + 1}/${presentationSteps.length}, Playing: ${isPlaying}, Paused: ${isPaused}, Audio: ${audioStatus}`);
+  }, [currentStep, isPlaying, isPaused, presentationSteps.length, audioStatus]);
 
-  const startPresentation = () => {
-    console.log('Starting presentation');
+  // Update audio status ref whenever status changes
+  React.useEffect(() => {
+    currentAudioStatusRef.current = audioStatus;
+  }, [audioStatus]);
+
+  const handlePlay = () => {
+    if (presentationSteps.length === 0) return;
+    
+    console.log('Starting presentation with', presentationSteps.length, 'steps');
     setIsPlaying(true);
     setIsPaused(false);
-    setCurrentStep(0);
-    previousSpeechStatusRef.current = '';
-    setStepStartTime(Date.now());
-    // Start speech for first step
-    setTimeout(() => startSpeech(), 100);
+    setAudioStatus('idle');
+    setAudioError(null);
+    
+    if (!isPaused) {
+      setCurrentStep(0);
+    }
   };
 
-  const pausePresentation = () => {
+  const handlePause = () => {
     console.log('Pausing presentation');
     setIsPaused(true);
-    pauseSpeech();
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
   };
 
-  const resumePresentation = () => {
+  const handleResume = () => {
     console.log('Resuming presentation');
     setIsPaused(false);
-    startSpeech();
+    if (audioRef.current && audioRef.current.paused) {
+      audioRef.current.play().catch(err => {
+        console.error('Error resuming audio:', err);
+        setAudioError('Failed to resume audio');
+        setAudioStatus('error');
+      });
+    }
   };
 
-  const stopPresentation = () => {
+  const handleStop = () => {
     console.log('Stopping presentation');
     setIsPlaying(false);
     setIsPaused(false);
     setCurrentStep(0);
-    stopSpeech();
-    previousSpeechStatusRef.current = '';
+    setAudioStatus('idle');
+    setAudioError(null);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
   };
 
-  const goToStep = (stepIndex: number) => {
-    console.log(`Going to step ${stepIndex + 1}`);
+  const handleStepClick = (stepIndex: number) => {
     setCurrentStep(stepIndex);
-    stopSpeech();
-    previousSpeechStatusRef.current = '';
-    setStepStartTime(Date.now());
     if (isPlaying && !isPaused) {
-      setTimeout(() => startSpeech(), 100);
+      // Will trigger audio playback via useEffect
     }
   };
 
   if (presentationSteps.length === 0) {
     return (
       <Card className="mb-6">
-        <CardContent className="py-8 text-center">
-          <div className="text-gray-500">
-            <h3 className="text-lg font-semibold mb-2">📹 Video Presentation Not Ready</h3>
-            <p>Generate both images and step details to create a video-like presentation.</p>
-          </div>
-        </CardContent>
+        <CardHeader>
+          <CardTitle>Video-like Presentation</CardTitle>
+          <CardDescription>
+            No steps available for presentation. Make sure you have generated both images and audio for the steps.
+          </CardDescription>
+        </CardHeader>
       </Card>
     );
   }
 
-  const progress = ((currentStep + 1) / presentationSteps.length) * 100;
-  const currentDuration = stepStartTime > 0 ? Math.floor((Date.now() - stepStartTime) / 1000) : 0;
+  const progress = presentationSteps.length > 0 ? ((currentStep + 1) / presentationSteps.length) * 100 : 0;
 
   return (
     <Card className="mb-6">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          📹 Video Presentation
-          <div className="flex gap-2">
-            {!isPlaying ? (
-              <Button 
-                onClick={startPresentation}
-                className="bg-red-600 hover:bg-red-700 text-white"
-                size="sm"
-              >
-                ▶️ Play Presentation
-              </Button>
-            ) : isPaused ? (
-              <Button 
-                onClick={resumePresentation}
-                className="bg-green-600 hover:bg-green-700 text-white"
-                size="sm"
-              >
-                ▶️ Resume
-              </Button>
-            ) : (
-              <Button 
-                onClick={pausePresentation}
-                variant="outline"
-                size="sm"
-              >
-                ⏸️ Pause
-              </Button>
-            )}
-            <Button 
-              onClick={stopPresentation}
-              variant="outline"
-              size="sm"
-              disabled={!isPlaying}
-            >
-              ⏹️ Stop
-            </Button>
-          </div>
-        </CardTitle>
+        <CardTitle>Video-like Presentation ({presentationSteps.length} steps)</CardTitle>
         <CardDescription>
-          Watch an interactive presentation with images and narration for each step
+          Watch the supply chain steps with synchronized images and narration
         </CardDescription>
       </CardHeader>
-      
-      <CardContent className="space-y-4">
-        {/* Progress Bar */}
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div 
-            className="bg-red-600 h-2 rounded-full transition-all duration-500"
-            style={{ width: `${progress}%` }}
-          ></div>
-        </div>
-        
-        {/* Step Counter */}
-        <div className="text-center text-sm text-gray-600">
-          Step {currentStep + 1} of {presentationSteps.length}
-        </div>
-
-        {/* Debug Info */}
-        <div className="text-xs text-gray-500 text-center">
-          Speech: {speechStatus} → {previousSpeechStatusRef.current} | Playing: {isPlaying.toString()} | Duration: {currentDuration}s
-        </div>
-
-        {/* Main Presentation Area */}
-        <div className="relative bg-black rounded-lg overflow-hidden" style={{ aspectRatio: '16/9' }}>
-          {currentImage && (
-            <div className="w-full h-full flex items-center justify-center">
-              {(() => {
-                const dataObj = (currentImage.imageData && typeof currentImage.imageData === 'object')
-                  ? (currentImage.imageData as { image?: string | null; mimeType?: string; text?: string })
-                  : null;
-                const imgSrc = dataObj?.image
-                  ? `data:${dataObj.mimeType || 'image/png'};base64,${dataObj.image}`
-                  : null;
-                
-                if (imgSrc) {
-                  return (
-                    <img
-                      src={imgSrc}
-                      alt={`Step ${currentStepData.stepNumber}: ${currentStepData.title}`}
-                      className="w-full h-full object-cover"
-                    />
-                  );
-                } else {
-                  return (
-                    <div className="w-full h-full flex items-center justify-center text-white bg-gray-800">
-                      <div className="text-center">
-                        <h3 className="text-xl font-semibold mb-2">{currentStepData.stage}</h3>
-                        <p className="text-gray-300">{currentStepData.title}</p>
-                      </div>
-                    </div>
-                  );
-                }
-              })()}
-            </div>
-          )}
-          
-          {/* Video-like Controls Overlay */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-            <div className="text-white">
-              <h3 className="font-semibold">{currentStepData?.stage}</h3>
-              <p className="text-sm text-gray-300">{currentStepData?.title}</p>
-            </div>
-          </div>
-
-          {/* Speaking Indicator */}
-          {speechStatus === "started" && (
-            <div className="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs flex items-center gap-2">
-              <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-              LIVE
-            </div>
-          )}
-
-          {/* Paused Indicator */}
-          {isPaused && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <div className="bg-white/90 rounded-full p-4">
-                <div className="text-black text-4xl">⏸️</div>
+      <CardContent>
+        {/* Main presentation area */}
+        <div className="bg-black rounded-lg overflow-hidden mb-4" style={{ aspectRatio: '16/9' }}>
+          {currentStepData && currentImage && (
+            <div className="relative w-full h-full">
+              <img
+                src={(() => {
+                  // Handle different image data structures
+                  if (typeof currentImage.imageData === 'string') {
+                    return `data:image/jpeg;base64,${currentImage.imageData}`;
+                  } else if (typeof currentImage.imageData === 'object' && currentImage.imageData.image) {
+                    return `data:${currentImage.imageData.mimeType || 'image/jpeg'};base64,${currentImage.imageData.image}`;
+                  }
+                  console.warn('Invalid image data structure:', currentImage.imageData);
+                  return '';
+                })()}
+                alt={`Step ${currentStepData.stepNumber}: ${currentStepData.title}`}
+                className="w-full h-full object-cover"
+                onError={(_e) => {
+                  console.error('Video presentation image load error:', currentImage.imageData);
+                }}
+              />
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                <h3 className="text-white text-lg font-semibold">
+                  Step {currentStepData.stepNumber}: {currentStepData.stage}
+                </h3>
+                <p className="text-gray-200 text-sm">{currentStepData.title}</p>
+              </div>
+              
+              {/* Audio status indicator */}
+              <div className="absolute top-4 right-4">
+                {audioStatus === 'loading' && (
+                  <div className="bg-orange-500 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
+                    <div className="animate-spin w-3 h-3 border border-white border-t-transparent rounded-full"></div>
+                    Loading Audio
+                  </div>
+                )}
+                {audioStatus === 'playing' && (
+                  <div className="bg-green-500 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
+                    <div className="animate-pulse w-2 h-2 bg-white rounded-full"></div>
+                    Playing
+                  </div>
+                )}
+                {audioStatus === 'error' && (
+                  <div className="bg-red-500 text-white px-2 py-1 rounded text-xs">
+                    Audio Error
+                  </div>
+                )}
               </div>
             </div>
           )}
         </div>
 
-        {/* Step Navigation */}
-        <div className="flex flex-wrap gap-2 justify-center">
-          {presentationSteps.map((step, index) => (
-            <Button
-              key={step.stepNumber}
-              onClick={() => goToStep(index)}
-              variant={index === currentStep ? "default" : "outline"}
-              size="sm"
-              className={`text-xs ${index === currentStep ? 'bg-red-600 hover:bg-red-700' : ''}`}
-            >
-              {step.stepNumber}
+        {/* Controls */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-center gap-4">
+            {!isPlaying ? (
+              <Button onClick={handlePlay} className="bg-green-600 hover:bg-green-700">
+                ▶️ Play Presentation
+              </Button>
+            ) : isPaused ? (
+              <Button onClick={handleResume} className="bg-green-600 hover:bg-green-700">
+                ▶️ Resume
+              </Button>
+            ) : (
+              <Button onClick={handlePause} variant="outline">
+                ⏸️ Pause
+              </Button>
+            )}
+            
+            <Button onClick={handleStop} variant="outline">
+              ⏹️ Stop
             </Button>
-          ))}
-        </div>
-
-        {/* Current Step Info */}
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="font-semibold mb-2">Current Step: {currentStepData?.stage}</h4>
-          <p className="text-sm text-gray-700 mb-2">{currentStepData?.description}</p>
-          <div className="text-xs text-gray-600 italic">
-            &ldquo;{currentStepData?.videoScript}&rdquo;
           </div>
+
+          {/* Progress bar */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm text-gray-600">
+              <span>Step {currentStep + 1} of {presentationSteps.length}</span>
+              <span>{progress.toFixed(0)}% complete</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Step navigation */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {presentationSteps.map((step, index) => (
+              <button
+                key={step.stepNumber}
+                onClick={() => handleStepClick(index)}
+                className={`p-2 text-xs rounded border text-left ${
+                  index === currentStep
+                    ? 'bg-blue-100 border-blue-300 text-blue-800'
+                    : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                }`}
+              >
+                <div className="font-semibold">Step {step.stepNumber}</div>
+                <div className="truncate">{step.title}</div>
+              </button>
+            ))}
+          </div>
+
+          {audioError && (
+            <div className="text-red-600 text-sm mt-2">
+              Audio Error: {audioError}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -520,7 +728,9 @@ export default function Home() {
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [supplyChain, setSupplyChain] = useState<{ productName: string; supplyChainSteps: SupplyChainStep[] } | null>(null);
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
+  const [generatedAudio, setGeneratedAudio] = useState<GeneratedAudio[]>([]);
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
 
   const generateSupplyChain = async () => {
     if (!productName.trim()) return;
@@ -600,34 +810,119 @@ export default function Home() {
     }
   };
 
-  const generateImages = async () => {
+  const generateImagesAndAudio = async () => {
     if (!supplyChain) return;
     
     setIsGeneratingImages(true);
+    setIsGeneratingAudio(true);
+    
     try {
-      const response = await fetch('/api/generate-images', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          steps: supplyChain.supplyChainSteps.map(step => ({
-            ...step,
-            // Use imagePrompt if available, otherwise create a basic prompt
-            prompt: step.imagePrompt || `Professional ${step.stage.toLowerCase()} process for ${supplyChain.productName}`
-          }))
-        }),
-      });
+      const detailedSteps = supplyChain.supplyChainSteps.filter(step => step.isDetailed);
       
-      const data = await response.json();
-      setGeneratedImages(data.images || []);
+      // Generate images and audio in parallel for each step
+      const promises = detailedSteps.map(async (step) => {
+        const imagePromise = fetch('/api/generate-images', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            steps: [step].map(s => ({
+              ...s,
+              prompt: s.imagePrompt || `Professional ${s.stage.toLowerCase()} process for ${supplyChain.productName}`
+            }))
+          }),
+        });
+
+        const audioPromise = fetch('/api/generate-audio', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            text: step.videoScript || `Step ${step.stepNumber}: ${step.title}. ${step.description || ''}`
+          }),
+        });
+
+        try {
+          const [imageResponse, audioResponse] = await Promise.all([imagePromise, audioPromise]);
+          
+          // Process image response
+          let imageResult = null;
+          if (imageResponse.ok) {
+            const imageData = await imageResponse.json();
+            imageResult = imageData.images?.[0] || null;
+          } else {
+            console.error(`Image generation failed for step ${step.stepNumber}`);
+          }
+
+          // Process audio response
+          let audioResult = null;
+          if (audioResponse.ok) {
+            const audioData = await audioResponse.json();
+            if (audioData.success) {
+              audioResult = {
+                stepNumber: step.stepNumber,
+                success: true,
+                audioData: audioData.audioData,
+                mimeType: audioData.mimeType,
+                generationTime: audioData.generationTime
+              };
+            } else {
+              audioResult = {
+                stepNumber: step.stepNumber,
+                success: false,
+                error: audioData.error || 'Audio generation failed'
+              };
+            }
+          } else {
+            console.error(`Audio generation failed for step ${step.stepNumber}`);
+            audioResult = {
+              stepNumber: step.stepNumber,
+              success: false,
+              error: 'Audio generation request failed'
+            };
+          }
+
+          return { image: imageResult, audio: audioResult };
+        } catch (error) {
+          console.error(`Error generating content for step ${step.stepNumber}:`, error);
+          return {
+            image: null,
+            audio: {
+              stepNumber: step.stepNumber,
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error'
+            }
+          };
+        }
+      });
+
+      // Wait for all generations to complete
+      console.log(`Starting parallel generation for ${detailedSteps.length} steps...`);
+      const results = await Promise.all(promises);
+      
+      // Separate images and audio results
+      const images = results.map(r => r.image).filter(Boolean) as GeneratedImage[];
+      const audioResults = results.map(r => r.audio).filter(Boolean) as GeneratedAudio[];
+      
+      console.log(`Generation complete: ${images.length} images, ${audioResults.length} audio files`);
+      
+      setGeneratedImages(images);
+      setGeneratedAudio(audioResults);
+      
     } catch (error) {
-      console.error('Error generating images:', error);
+      console.error('Error in parallel generation:', error);
       setGeneratedImages([]);
+      setGeneratedAudio([]);
     } finally {
       setIsGeneratingImages(false);
+      setIsGeneratingAudio(false);
     }
   };
+
+  // Keep the old function for backward compatibility, but redirect to new one
+  const generateImages = () => generateImagesAndAudio();
 
   const downloadJSON = () => {
     if (!supplyChain) return;
@@ -749,15 +1044,15 @@ export default function Home() {
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                                      Generate Images for Each Step
+                  Generate Images & Audio for Each Step
                   <div className="flex gap-2">
                     <Button 
                       onClick={generateImages}
-                      disabled={isGeneratingImages || isLoadingDetails || !supplyChain.supplyChainSteps.some(step => step.isDetailed)}
+                      disabled={isGeneratingImages || isGeneratingAudio || isLoadingDetails || !supplyChain.supplyChainSteps.some(step => step.isDetailed)}
                       variant="default"
                       size="sm"
                     >
-                                                                      {isGeneratingImages ? 'Generating Images...' : 'Generate Images'}
+                      {isGeneratingImages || isGeneratingAudio ? 'Generating Content...' : 'Generate Images & Audio'}
                     </Button>
                     {generatedImages && generatedImages.length > 0 && (
                       <Button onClick={downloadImagesData} variant="outline" size="sm">
@@ -767,120 +1062,137 @@ export default function Home() {
                   </div>
                 </CardTitle>
                 <CardDescription>
-                  Generate professional images for each supply chain step using AI
+                  Generate professional images and audio narration for each supply chain step
+                  {(isGeneratingImages || isGeneratingAudio) && (
+                    <div className="mt-2">
+                      <div className="flex items-center gap-2 text-blue-600">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                        <span>
+                          {isGeneratingImages && isGeneratingAudio ? 'Generating images and audio in parallel...' : 
+                           isGeneratingImages ? 'Generating images...' : 
+                           'Generating audio...'}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-sm text-gray-600">
+                        Processing {supplyChain.supplyChainSteps.filter(step => step.isDetailed).length} steps simultaneously
+                      </div>
+                    </div>
+                  )}
+                  {generatedImages.length > 0 && (
+                    <div className="mt-2 text-green-600">
+                      ✅ Images: {generatedImages.filter(img => img.success).length}/{generatedImages.length} generated successfully
+                    </div>
+                  )}
+                  {generatedAudio.length > 0 && (
+                    <div className="mt-1 text-green-600">
+                      🔊 Audio: {generatedAudio.filter(audio => audio.success).length}/{generatedAudio.length} generated successfully
+                    </div>
+                  )}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                {isGeneratingImages && (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Generating images for all steps in parallel...</p>
-                  </div>
-                )}
-                
-                {generatedImages.length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {generatedImages.map((image, index) => (
-                      <Card key={index} className="overflow-hidden">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm">
-                            Step {image.stepNumber}: {image.stage}
-                          </CardTitle>
-                          <CardDescription className="text-xs">
-                            {image.title}
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          {image.success ? (
-                            <div className="space-y-2">
-                              <div className="bg-gray-100 p-3 rounded-md min-h-[200px] flex items-center justify-center">
-                                {(() => {
-                                  const dataObj = (image.imageData && typeof image.imageData === 'object')
-                                    ? (image.imageData as { 
-                                        description?: string; 
-                                        type?: string; 
-                                        instructions?: string;
-                                        image?: string | null; 
-                                        mimeType?: string; 
-                                        text?: string 
-                                      })
-                                    : null;
-                                    
-                                  // Check for actual image first
-                                  const imgSrc = dataObj?.image
-                                    ? `data:${dataObj.mimeType || 'image/png'};base64,${dataObj.image}`
-                                    : null;
-                                  if (imgSrc) {
-                                    return (
-                                      <img
-                                        src={imgSrc}
-                                        alt={`Step ${image.stepNumber}: ${image.title}`}
-                                        className="w-full h-auto rounded-md"
-                                      />
-                                    );
-                                  }
-                                  
-                                  // Show description if available (fallback for text-only responses)
-                                  if (dataObj?.description) {
-                                    return (
-                                      <div className="text-gray-700 text-sm space-y-2 w-full">
-                                        <div className="font-medium text-orange-600 mb-2 flex items-center gap-2">
-                                          <span>⚠️</span>
-                                          <span>Image Generation Unavailable</span>
-                                        </div>
-                                        <p className="leading-relaxed text-left text-xs">
-                                          {dataObj.description}
-                                        </p>
-                                        <div className="mt-3 p-2 bg-orange-50 rounded text-xs text-orange-800">
-                                          <strong>💡 Setup Required:</strong> To generate actual images, configure your Google Cloud Project ID and ensure Vertex AI API access.
-                                        </div>
+              {(generatedImages.length > 0 || generatedAudio.length > 0) && (
+                <CardContent>
+                  <div className="grid gap-4">
+                    {supplyChain.supplyChainSteps.filter(step => step.isDetailed).map((step) => {
+                      const image = generatedImages.find(img => img.stepNumber === step.stepNumber);
+                      const audio = generatedAudio.find(aud => aud.stepNumber === step.stepNumber);
+                      
+                      return (
+                        <div key={step.stepNumber} className="border rounded-lg p-4">
+                          <h4 className="font-semibold mb-3">
+                            Step {step.stepNumber}: {step.stage} - {step.title}
+                          </h4>
+                          
+                          <div className="grid md:grid-cols-2 gap-4">
+                            {/* Image Section */}
+                            <div>
+                              <h5 className="text-sm font-medium mb-2 flex items-center gap-2">
+                                🖼️ Image 
+                                {image?.success ? (
+                                  <span className="text-green-600 text-xs">✅ Generated</span>
+                                ) : image ? (
+                                  <span className="text-red-600 text-xs">❌ Failed</span>
+                                ) : (
+                                  <span className="text-gray-500 text-xs">⏳ Pending</span>
+                                )}
+                              </h5>
+                              
+                              {image?.success && image.imageData && (
+                                <div className="space-y-2">
+                                  <img
+                                    src={(() => {
+                                      // Handle different image data structures
+                                      if (typeof image.imageData === 'string') {
+                                        return `data:image/jpeg;base64,${image.imageData}`;
+                                      } else if (typeof image.imageData === 'object' && image.imageData.image) {
+                                        return `data:${image.imageData.mimeType || 'image/jpeg'};base64,${image.imageData.image}`;
+                                      }
+                                      return '';
+                                    })()}
+                                    alt={`Generated image for ${step.title}`}
+                                    className="w-full h-32 object-cover rounded border"
+                                    onError={(_e) => {
+                                      console.error('Image load error for step', step.stepNumber, ':', image.imageData);
+                                    }}
+                                  />
+                                </div>
+                              )}
+                              
+                              {image?.error && (
+                                <div className="text-red-600 text-sm bg-red-50 p-2 rounded">
+                                  Error: {image.error}
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Audio Section */}
+                            <div>
+                              <h5 className="text-sm font-medium mb-2 flex items-center gap-2">
+                                🔊 Audio 
+                                {audio?.success ? (
+                                  <span className="text-green-600 text-xs">✅ Generated</span>
+                                ) : audio ? (
+                                  <span className="text-red-600 text-xs">❌ Failed</span>
+                                ) : (
+                                  <span className="text-gray-500 text-xs">⏳ Pending</span>
+                                )}
+                              </h5>
+                              
+                              {audio?.success && audio.audioData && (
+                                <div className="space-y-2">
+                                  <div className="bg-green-50 p-3 rounded border">
+                                    <div className="text-sm">
+                                      <div className="font-medium text-green-800">Audio Ready</div>
+                                      <div className="text-green-600 text-xs mt-1">
+                                        Type: {audio.mimeType || 'audio/pcm'} 
+                                        {audio.generationTime && ` • ${audio.generationTime.toFixed(1)}s to generate`}
                                       </div>
-                                    );
-                                  }
-                                  
-                                  // Fallback to text or default message
-                                  const textFallback = typeof image.imageData === 'string'
-                                    ? image.imageData
-                                    : dataObj?.text || 'Image description generated successfully';
-                                    
-                                  return (
-                                    <p className="text-gray-600 text-sm text-center">
-                                      {textFallback}
-                                    </p>
-                                  );
-                                })()}
-                              </div>
-                              <details className="text-xs">
-                                <summary className="cursor-pointer text-blue-600 hover:text-blue-800">
-                                  View Original Prompt
-                                </summary>
-                                <p className="mt-2 text-gray-700 bg-gray-50 p-2 rounded">
-                                  {image.imagePrompt}
-                                </p>
-                              </details>
-                              <div className="text-xs text-gray-500 flex justify-between">
-                                <span>Model: {image.modelUsed || 'gemini-pro'}</span>
-                                <span>{image.isImageGenerated ? '🖼️ Image' : '📝 Description'}</span>
-                              </div>
+                                      <div className="text-gray-600 text-xs mt-1">
+                                        Script: &ldquo;{step.videoScript?.substring(0, 100)}...&rdquo;
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {audio?.error && (
+                                <div className="text-red-600 text-sm bg-red-50 p-2 rounded">
+                                  Error: {audio.error}
+                                </div>
+                              )}
                             </div>
-                          ) : (
-                            <div className="bg-red-50 p-3 rounded-md min-h-[200px] flex items-center justify-center">
-                              <p className="text-red-600 text-sm text-center">
-                                Failed to generate image
-                              </p>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                )}
-              </CardContent>
+                </CardContent>
+              )}
             </Card>
 
             <PlayAllScripts steps={supplyChain.supplyChainSteps} />
 
-            <VideoPresentation steps={supplyChain.supplyChainSteps} images={generatedImages} />
+            <VideoPresentation steps={supplyChain.supplyChainSteps} images={generatedImages} audioData={generatedAudio} />
 
             <div className="grid gap-6">
               {supplyChain.supplyChainSteps.map((step, index) => (

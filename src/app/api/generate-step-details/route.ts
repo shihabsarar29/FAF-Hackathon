@@ -30,10 +30,10 @@ Return ONLY a JSON object with these 5 fields:
   "description": "Short 1-2 sentence description of what happens in this step",
   "imagePrompt": "Concise prompt for AI image generation (max 20 words)",
   "videoGenPrompt": "Brief prompt for video generation (max 15 words)",
-  "videoScript": "Short narration script for this step (2-3 sentences max)"
+  "videoScript": "ONE SENTENCE narration script for this step (10-15 words max)"
 }
 
-Keep all content concise and focused. Make it specific to ${productName}.`;
+Keep all content concise and focused. Make it specific to ${productName}. The videoScript must be ONE sentence only, no more than 15 words.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -54,7 +54,7 @@ Keep all content concise and focused. Make it specific to ${productName}.`;
           description: `This step handles ${title.toLowerCase()} for ${productName} production.`,
           imagePrompt: `Professional ${stage.toLowerCase()} process for ${productName}`,
           videoGenPrompt: `${stage} workflow for ${productName}`,
-          videoScript: `In this step, we focus on ${title.toLowerCase()} to ensure quality ${productName} production.`
+          videoScript: `This step focuses on ${title.toLowerCase()} for ${productName}.`
         };
       }
     } catch {
@@ -66,7 +66,7 @@ Keep all content concise and focused. Make it specific to ${productName}.`;
         description: `This step handles ${title.toLowerCase()} for ${productName} production.`,
         imagePrompt: `Professional ${stage.toLowerCase()} process for ${productName}`,
         videoGenPrompt: `${stage} workflow for ${productName}`,
-        videoScript: `In this step, we focus on ${title.toLowerCase()} to ensure quality ${productName} production.`
+        videoScript: `This step focuses on ${title.toLowerCase()} for ${productName}.`
       };
     }
 
