@@ -213,6 +213,148 @@ export default function StoryPage() {
           </Card>
         </div>
 
+        {/* Platform Architecture Diagram */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3">
+              <CheckCircle className="w-6 h-6 text-green-600" />
+              Platform Architecture
+            </CardTitle>
+            <CardDescription>How the Product Knowledge Platform works</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-6">
+              <div className="bg-white p-6 rounded-lg border">
+                <div className="flow-diagram">
+                  {/* Step 1: User Input */}
+                  <div className="flex flex-col items-center mb-6">
+                    <div className="bg-blue-100 rounded-lg p-4 text-center">
+                      <div className="text-2xl mb-2">👤</div>
+                      <div className="font-semibold text-sm">User Input</div>
+                      <div className="text-xs text-gray-600">Product Name</div>
+                    </div>
+                    <div className="h-4 w-0.5 bg-gray-300 my-2"></div>
+                  </div>
+
+                  {/* Step 2: Analysis Type Selection */}
+                  <div className="flex flex-col items-center mb-6">
+                    <div className="bg-yellow-100 rounded-lg p-3 text-center mb-4">
+                      <div className="font-semibold text-sm">Analysis Type</div>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full max-w-2xl">
+                      <div className="bg-green-50 p-3 rounded text-center">
+                        <div className="text-lg">🏭</div>
+                        <div className="text-xs">Supply Chain</div>
+                      </div>
+                      <div className="bg-green-50 p-3 rounded text-center">
+                        <div className="text-lg">🌍</div>
+                        <div className="text-xs">Environmental</div>
+                      </div>
+                      <div className="bg-green-50 p-3 rounded text-center">
+                        <div className="text-lg">🏥</div>
+                        <div className="text-xs">Health Effects</div>
+                      </div>
+                      <div className="bg-green-50 p-3 rounded text-center">
+                        <div className="text-lg">📚</div>
+                        <div className="text-xs">History</div>
+                      </div>
+                    </div>
+                    <div className="h-4 w-0.5 bg-gray-300 my-2"></div>
+                  </div>
+
+                  {/* Step 3: AI Processing */}
+                  <div className="flex flex-col items-center mb-6">
+                    <div className="bg-purple-100 rounded-lg p-4 text-center">
+                      <div className="text-2xl mb-2">⚡</div>
+                      <div className="font-semibold text-sm">Groq LLaMA-4</div>
+                      <div className="text-xs text-gray-600">Content Generation</div>
+                    </div>
+                    <div className="h-4 w-0.5 bg-gray-300 my-2"></div>
+                  </div>
+
+                  {/* Step 4: Parallel Processing */}
+                  <div className="flex flex-col items-center mb-6">
+                    <div className="bg-orange-100 rounded-lg p-3 text-center mb-4">
+                      <div className="text-2xl mb-2">🎨</div>
+                      <div className="font-semibold text-sm">Parallel Processing</div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-md">
+                      <div className="bg-orange-50 p-3 rounded text-center">
+                        <div className="text-lg">🖼️</div>
+                        <div className="text-xs">Gemini Imagen</div>
+                        <div className="text-xs text-gray-600">Images</div>
+                      </div>
+                      <div className="bg-orange-50 p-3 rounded text-center">
+                        <div className="text-lg">🔊</div>
+                        <div className="text-xs">OpenAI TTS</div>
+                        <div className="text-xs text-gray-600">Audio</div>
+                      </div>
+                    </div>
+                    <div className="h-4 w-0.5 bg-gray-300 my-2"></div>
+                  </div>
+
+                  {/* Step 5: Video Assembly */}
+                  <div className="flex flex-col items-center mb-6">
+                    <div className="bg-green-100 rounded-lg p-4 text-center">
+                      <div className="text-2xl mb-2">🎥</div>
+                      <div className="font-semibold text-sm">Video Presentation</div>
+                      <div className="text-xs text-gray-600">Assembly</div>
+                    </div>
+                    <div className="h-4 w-0.5 bg-gray-300 my-2"></div>
+                  </div>
+
+                  {/* Step 6: Interactive Player */}
+                  <div className="flex flex-col items-center">
+                    <div className="bg-pink-100 rounded-lg p-4 text-center">
+                      <div className="text-2xl mb-2">▶️</div>
+                      <div className="font-semibold text-sm">Interactive Player</div>
+                      <div className="text-xs text-gray-600">with Navigation</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-semibold mb-3 text-gray-700">Input & Analysis</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span className="text-sm">User enters any product name</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span className="text-sm">Choose analysis dimension</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span className="text-sm">AI generates structured overview</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold mb-3 text-gray-700">Content Generation</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                    <span className="text-sm">Detailed step analysis</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                    <span className="text-sm">Parallel image & audio generation</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                    <span className="text-sm">Interactive video assembly</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Current Status */}
         <Card className="mb-8">
           <CardHeader>

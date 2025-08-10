@@ -1,49 +1,69 @@
-# Supply Chain Generator
+# Product Knowledge Platform
 
-A Next.js web application that generates step-wise supply chain procedures for any product using Google's Gemini AI, with structured JSON output for video generation and **parallel AI image generation** for each step.
+A Next.js web application that helps users explore products through AI-powered analysis of supply chains, environmental impacts, health effects, and historical origins. Features automatic image and audio generation with interactive video presentations.
+
+## Vision
+
+Instead of social media reels, people will be checking out product reels—discovering the fascinating stories behind everyday items through engaging, bite-sized video content that educates while it entertains.
 
 ## Features
 
-- Clean, modern UI built with Tailwind CSS and shadcn/ui
-- AI-powered supply chain generation using Gemini Pro
-- **Structured JSON output** with detailed step-by-step information
-- **Video-ready content** with scripts, activities, and stakeholder information
-- **🆕 Parallel AI Image Generation** for each supply chain step
-- **Download capabilities** for JSON data, video scripts, and image data
-- Responsive design that works on all devices
-- Step-by-step supply chain procedures including:
-  - Raw Material Sourcing
-  - Manufacturing/Production
-  - Quality Control
-  - Packaging
-  - Distribution
-  - Retail/End Consumer
+### 🔍 **Multi-Dimensional Product Analysis**
+- **Supply Chain Steps**: Core production and manufacturing processes
+- **Environmental Effects**: Positive and negative environmental impacts 
+- **Health Effects**: Health-related impacts and benefits
+- **History of Origin**: Historical development and origins
 
-## Video Generation Features
+### 🎥 **Interactive Video Presentations**
+- **Automatic playback** with synchronized images and audio
+- **Step navigation** with visual progress tracking
+- **Professional narration** using AI-generated audio
+- **Responsive video player** with play/pause/stop controls
 
-Each supply chain step includes:
-- **Step Number & Stage**: Clear identification of each phase
-- **Title & Description**: Detailed explanation of the process
-- **Key Activities**: Specific tasks and actions required
-- **Estimated Duration**: Time estimates for planning
-- **Key Stakeholders**: People and teams involved
-- **Video Script**: Ready-to-use narration script for video creation
+### 🎨 **AI-Powered Content Generation**
+- **Parallel image generation** for all analysis items
+- **Professional photography-style** images
+- **Text-to-speech audio** narration
+- **Context-aware prompts** for each content type
 
-## 🆕 AI Image Generation Features
+### 💻 **Modern User Experience**
+- **Clean, responsive design** built with Tailwind CSS and shadcn/ui
+- **Real-time generation progress** with loading states
+- **Automatic workflow** - no manual button clicking needed
+- **Download capabilities** for generated content
 
-- **Parallel Processing**: Generate images for all steps simultaneously
-- **Professional Quality**: Business/industrial style images suitable for presentations
-- **Context-Aware**: Each image is generated based on the specific step content
-- **Structured Output**: Complete image data with prompts and metadata
-- **Download Ready**: Export image data for use in video editing tools
+## Technology Stack
 
-## Prerequisites
+### **Frontend**
+- Next.js 15 with TypeScript
+- Tailwind CSS for styling
+- shadcn/ui components
+- Responsive design
 
-- Node.js 18+ 
-- npm or yarn
-- Google AI API key (Gemini)
+### **AI & APIs**
+- **Groq LLaMA-4** for ultra-fast content generation
+- **Google Gemini Imagen** for image generation
+- **OpenAI TTS** for audio narration
+- Parallel processing for optimal performance
+
+### **Cost Optimization**
+- **$0.10** for first-time generation
+- **$0** for replays and indexed reuse
+- Image-first video generation approach
+- Modular media architecture for reusability
 
 ## Setup
+
+### Prerequisites
+- Node.js 18+
+- npm or yarn
+
+### API Keys Required
+- `GROQ_API_KEY` for content generation
+- `GOOGLE_GENERATIVE_AI_API_KEY` for image generation
+- `OPENAI_API_KEY` for audio generation
+
+### Installation
 
 1. **Clone and install dependencies:**
    ```bash
@@ -52,85 +72,61 @@ Each supply chain step includes:
    ```
 
 2. **Configure environment variables:**
-   - Copy `.env.local.example` to `.env.local`
-   - Add your Google AI API key:
-     ```
-     GOOGLE_GENERATIVE_AI_API_KEY=your_actual_api_key_here
-     ```
+   ```bash
+   cp .env.local.example .env.local
+   ```
+   
+   Add your API keys to `.env.local`:
+   ```
+   GROQ_API_KEY=your_groq_api_key_here
+   GOOGLE_GENERATIVE_AI_API_KEY=your_google_ai_key_here
+   OPENAI_API_KEY=your_openai_key_here
+   ```
 
-3. **Get a Google AI API key:**
-   - Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - Create a new API key
-   - Copy the key to your `.env.local` file
-
-4. **Run the development server:**
+3. **Run the development server:**
    ```bash
    npm run dev
    ```
 
-5. **Open your browser:**
+4. **Open your browser:**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## Usage
 
-1. **Generate Supply Chain**: Enter a product name and generate the supply chain procedure
-2. **Generate Images**: Click "Generate Images" to create AI-generated images for all steps in parallel
-3. **Download Content**: Export JSON data, video scripts, and image data for further processing
-4. **View Results**: See structured output with separate sections for each step and generated images
+### Basic Workflow
+1. **Enter Product Name**: Type any product (e.g., "Smartphone", "Coffee", "T-shirt")
+2. **Choose Analysis Type**: Select from supply chain, environmental, health, or history
+3. **Automatic Generation**: Watch as the platform automatically:
+   - Generates overview and detailed analysis
+   - Creates professional images for each step
+   - Generates audio narration
+   - Assembles everything into a video presentation
 
-## Output Format
+### Content Types
 
-### Supply Chain Data
-```json
-{
-  "productName": "Product Name",
-  "supplyChainSteps": [
-    {
-      "stepNumber": 1,
-      "stage": "Stage Name",
-      "title": "Step Title",
-      "description": "Detailed description",
-      "keyActivities": ["Activity 1", "Activity 2"],
-      "estimatedDuration": "Time estimate",
-      "keyStakeholders": ["Stakeholder 1", "Stakeholder 2"],
-      "videoScript": "Ready-to-use video narration script"
-    }
-  ]
-}
-```
+#### 🏭 **Supply Chain Analysis**
+- Raw material sourcing
+- Manufacturing processes
+- Quality control
+- Distribution and retail
 
-### Generated Images Data
-```json
-{
-  "images": [
-    {
-      "stepNumber": 1,
-      "stage": "Stage Name",
-      "title": "Step Title",
-      "imagePrompt": "AI prompt used for generation",
-      "imageData": "Generated image data",
-      "success": true
-    }
-  ],
-  "totalSteps": 6,
-  "successfulGenerations": 6
-}
-```
+#### 🌍 **Environmental Impact**
+- Positive environmental effects
+- Negative environmental impacts
+- Sustainability practices
+- Carbon footprint analysis
 
-## Download Options
+#### 🏥 **Health Effects**
+- Positive health benefits
+- Potential health risks
+- Usage recommendations
+- Safety considerations
 
-- **JSON Data**: Complete structured data for API integration
-- **Video Scripts**: Formatted text files with all video narration content
-- **🆕 Images Data**: Complete image generation data with prompts and metadata
-
-## Technology Stack
-
-- **Frontend:** Next.js 14, React, TypeScript
-- **Styling:** Tailwind CSS
-- **UI Components:** shadcn/ui
-- **AI:** Google Gemini Pro via @google/generative-ai
-- **🆕 Image Generation:** Gemini 2.0 Flash Exp for parallel image creation
-- **Deployment:** Ready for Vercel, Netlify, or any Next.js hosting platform
+#### 📚 **Historical Origins**
+- Product development timeline
+- Cultural significance
+- Innovation milestones
+- Evolution over time
 
 ## Project Structure
 
@@ -139,53 +135,114 @@ supply-chain-generator/
 ├── src/
 │   ├── app/
 │   │   ├── api/
-│   │   │   ├── generate/
-│   │   │   │   └── route.ts          # Supply chain generation API
-│   │   │   └── generate-images/
-│   │   │       └── route.ts          # 🆕 Parallel image generation API
-│   │   ├── globals.css               # Global styles
-│   │   └── page.tsx                  # Main page with image generation
-│   └── components/
-│       └── ui/                       # shadcn/ui components
-├── .env.local                        # Environment variables
-├── sample-output.json                # Example supply chain output
-├── 🆕 sample-images-output.json      # Example images output
-└── README.md                         # This file
+│   │   │   ├── generate/              # Content generation
+│   │   │   ├── generate-step-details/ # Detailed analysis
+│   │   │   ├── generate-images/       # Image generation
+│   │   │   └── generate-audio/        # Audio generation
+│   │   ├── story/                     # Story page
+│   │   │   └── page.tsx
+│   │   ├── page.tsx                   # Main application
+│   │   └── layout.tsx                 # App layout
+│   ├── components/
+│   │   ├── ui/                        # shadcn/ui components
+│   │   └── VideoPresentation.tsx     # Video player component
+│   └── hooks/
+│       └── useGeminiAudio.ts          # Audio generation hook
+├── public/                            # Static assets
+├── .env.local                         # Environment variables
+└── README.md                          # This file
 ```
 
-## Customization
+## Key Optimizations
 
-- Modify the prompts in both API routes to change AI behavior
-- Update the UI components in `src/app/page.tsx`
-- Customize the JSON structure for different video generation tools
-- Adjust image generation requirements in the image API
-- Modify the styling in `src/app/globals.css`
+### 🎯 **RAG for Video Reuse**
+Semantic search system retrieves and reuses relevant footage as the library grows, approaching zero generation costs over time.
 
-## Video Generation Integration
+### ⚙️ **Step-based Segmentation** 
+Products share many identical steps (80%+ reuse rate), allowing efficient assembly from existing clips without regeneration.
 
-The structured output is designed to work with:
-- Video editing software (Adobe Premiere, Final Cut Pro)
-- AI video generation tools (Runway, Pika Labs, Sora)
-- Automated video creation platforms
-- Content management systems
-- **🆕 Image-to-video tools** using the generated AI images
+### 🔧 **Modular Media**
+Separate audio, text, and charts from visuals for maximum reusability and real-time data integration.
 
-## 🆕 Image Generation Workflow
+### 🖼️ **Image-first Generation**
+Start with cost-effective image sequences + TTS, then selectively upgrade popular content to full video.
 
-1. **Supply Chain Generation**: Create the structured supply chain procedure
-2. **Parallel Image Creation**: Generate professional images for all steps simultaneously
-3. **Content Assembly**: Combine supply chain data with generated images
-4. **Export & Integration**: Download all data for use in video creation tools
+## Output Formats
+
+### Analysis Data
+```json
+{
+  "productName": "Product Name",
+  "supplyChainSteps": [
+    {
+      "stepNumber": 1,
+      "stage": "Manufacturing",
+      "title": "Component Assembly",
+      "description": "Detailed process description",
+      "imagePrompt": "Professional photography prompt",
+      "videoScript": "Narration script",
+      "isDetailed": true
+    }
+  ]
+}
+```
+
+### Generated Content
+```json
+{
+  "images": [
+    {
+      "stepNumber": 1,
+      "success": true,
+      "imageData": "base64_image_data",
+      "imagePrompt": "Generation prompt used"
+    }
+  ],
+  "audio": [
+    {
+      "stepNumber": 1,
+      "success": true,
+      "audioData": "base64_audio_data",
+      "mimeType": "audio/mpeg"
+    }
+  ]
+}
+```
 
 ## Deployment
 
-The app is ready to deploy on:
-- Vercel (recommended for Next.js)
-- Netlify
-- Any platform that supports Next.js
+### Vercel (Recommended)
+1. Connect your GitHub repository
+2. Add environment variables in Vercel dashboard
+3. Deploy automatically on push
 
-Make sure to set the `GOOGLE_GENERATIVE_AI_API_KEY` environment variable in your deployment platform.
+### Environment Variables for Production
+```
+GROQ_API_KEY=your_production_groq_key
+GOOGLE_GENERATIVE_AI_API_KEY=your_production_google_key
+OPENAI_API_KEY=your_production_openai_key
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## Future Roadmap
+
+- **Multiplayer quizzes** with leaderboards
+- **Gamified exploration** like Alchemy game mechanics
+- **Video generation upgrade** from image sequences
+- **RAG-powered content reuse** system
+- **Real-time data integration** for dynamic content
 
 ## License
 
 MIT
+
+---
+
+**Experience the future of product learning today.** Try our Product Knowledge Platform and see how we make complex supply chains accessible and engaging.
