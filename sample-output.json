@@ -1,0 +1,131 @@
+{
+  "productName": "Smartphone",
+  "supplyChainSteps": [
+    {
+      "stepNumber": 1,
+      "stage": "Raw Material Sourcing",
+      "title": "Component Procurement",
+      "description": "Source high-quality materials including rare earth metals, glass, plastics, and electronic components from certified suppliers worldwide. Establish long-term contracts with reliable vendors to ensure consistent quality and supply chain stability.",
+      "keyActivities": [
+        "Identify and qualify suppliers",
+        "Negotiate pricing and terms",
+        "Conduct quality assessments",
+        "Establish supply agreements",
+        "Monitor supplier performance"
+      ],
+      "estimatedDuration": "4-6 weeks",
+      "keyStakeholders": [
+        "Procurement Team",
+        "Quality Assurance",
+        "Supply Chain Managers",
+        "Component Suppliers"
+      ],
+      "videoScript": "The journey of a smartphone begins with sourcing the finest materials from around the world. Our procurement team works with certified suppliers to secure rare earth metals, high-grade glass, durable plastics, and precision electronic components. We establish long-term partnerships to ensure consistent quality and reliable supply. Each supplier undergoes rigorous qualification processes, including quality audits and performance monitoring. This foundation sets the stage for manufacturing excellence."
+    },
+    {
+      "stepNumber": 2,
+      "stage": "Manufacturing/Production",
+      "title": "Assembly and Testing",
+      "description": "Assemble smartphone components in automated production lines with precision robotics. Conduct comprehensive testing at each stage including functionality, durability, and performance benchmarks. Implement quality control checkpoints throughout the assembly process.",
+      "keyActivities": [
+        "Component assembly",
+        "Quality testing",
+        "Performance validation",
+        "Defect detection",
+        "Production line optimization"
+      ],
+      "estimatedDuration": "2-3 weeks",
+      "keyStakeholders": [
+        "Production Engineers",
+        "Quality Control Technicians",
+        "Assembly Line Workers",
+        "Manufacturing Managers"
+      ],
+      "videoScript": "In our state-of-the-art manufacturing facility, precision robotics and skilled technicians work together to assemble each smartphone with meticulous attention to detail. The assembly process follows a carefully orchestrated sequence, with quality control checkpoints at every stage. Each device undergoes comprehensive testing for functionality, durability, and performance. Our automated systems ensure consistency while human expertise catches any anomalies. This rigorous process guarantees that every smartphone meets our exacting standards."
+    },
+    {
+      "stepNumber": 3,
+      "stage": "Quality Control",
+      "title": "Comprehensive Testing",
+      "description": "Implement multi-stage quality control protocols including stress testing, environmental testing, and user experience validation. Use advanced diagnostic tools and automated testing systems to ensure every device meets quality standards.",
+      "keyActivities": [
+        "Stress testing",
+        "Environmental testing",
+        "User experience validation",
+        "Defect analysis",
+        "Quality reporting"
+      ],
+      "estimatedDuration": "1-2 weeks",
+      "keyStakeholders": [
+        "Quality Engineers",
+        "Test Technicians",
+        "Quality Managers",
+        "Regulatory Compliance"
+      ],
+      "videoScript": "Quality is non-negotiable in our smartphone production. Every device undergoes rigorous testing protocols designed to simulate real-world conditions. Our stress testing includes drop tests, temperature extremes, and humidity exposure. Environmental testing ensures devices perform reliably in various conditions. User experience validation involves extensive usability testing with diverse user groups. Advanced diagnostic tools and automated systems work together to identify even the smallest defects. Only devices that pass every test proceed to packaging."
+    },
+    {
+      "stepNumber": 4,
+      "stage": "Packaging",
+      "title": "Secure Packaging and Documentation",
+      "description": "Package smartphones in protective materials with comprehensive documentation including user manuals, warranty information, and regulatory compliance certificates. Implement anti-counterfeiting measures and tracking systems.",
+      "keyActivities": [
+        "Protective packaging",
+        "Documentation preparation",
+        "Anti-counterfeiting measures",
+        "Tracking system implementation",
+        "Packaging quality control"
+      ],
+      "estimatedDuration": "3-5 days",
+      "keyStakeholders": [
+        "Packaging Specialists",
+        "Documentation Team",
+        "Quality Control",
+        "Logistics Coordinators"
+      ],
+      "videoScript": "Packaging is the final step before our smartphones reach customers. Each device is carefully wrapped in protective materials designed to withstand shipping and handling. We include comprehensive documentation - user manuals, warranty information, and all necessary regulatory compliance certificates. Anti-counterfeiting measures protect both our brand and customers. Each package includes unique tracking codes for complete supply chain visibility. Our packaging specialists ensure that every box meets our quality standards before it's sealed and prepared for shipping."
+    },
+    {
+      "stepNumber": 5,
+      "stage": "Distribution",
+      "title": "Global Logistics and Shipping",
+      "description": "Coordinate global distribution network using air, sea, and land transportation. Implement real-time tracking systems and optimize routes for efficiency. Ensure compliance with international shipping regulations and customs requirements.",
+      "keyActivities": [
+        "Route optimization",
+        "Carrier selection",
+        "Customs compliance",
+        "Real-time tracking",
+        "Delivery coordination"
+      ],
+      "estimatedDuration": "1-3 weeks",
+      "keyStakeholders": [
+        "Logistics Managers",
+        "Shipping Coordinators",
+        "Customs Specialists",
+        "Distribution Partners"
+      ],
+      "videoScript": "Our global distribution network ensures smartphones reach customers worldwide efficiently and reliably. We coordinate with multiple transportation partners, optimizing routes for speed and cost-effectiveness. Real-time tracking systems provide complete visibility throughout the journey. Our logistics team handles customs compliance, ensuring smooth passage through international borders. Whether by air, sea, or land, we maintain the highest standards of care and security. Each shipment is monitored until it reaches its final destination."
+    },
+    {
+      "stepNumber": 6,
+      "stage": "Retail/End Consumer",
+      "title": "Customer Experience and Support",
+      "description": "Deliver smartphones through authorized retail channels with comprehensive customer support. Provide post-sale services including technical support, warranty claims, and software updates. Monitor customer satisfaction and feedback.",
+      "keyActivities": [
+        "Retail distribution",
+        "Customer support",
+        "Technical assistance",
+        "Warranty services",
+        "Software updates"
+      ],
+      "estimatedDuration": "Ongoing",
+      "keyStakeholders": [
+        "Retail Partners",
+        "Customer Support",
+        "Technical Specialists",
+        "Product Managers"
+      ],
+      "videoScript": "The final stage of our supply chain focuses on delivering exceptional customer experiences. Our smartphones reach customers through authorized retail partners who provide expert guidance and support. Comprehensive customer support includes technical assistance, warranty services, and regular software updates. We monitor customer satisfaction closely, using feedback to continuously improve our products and services. Our commitment to customers extends far beyond the initial purchase, ensuring long-term satisfaction and loyalty."
+    }
+  ]
+} 
