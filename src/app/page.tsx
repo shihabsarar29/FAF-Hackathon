@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSpeech } from 'react-text-to-speech';
+import React from 'react'; // Added for React.useEffect
 
 interface SupplyChainStep {
   stepNumber: number;
@@ -226,6 +227,289 @@ function PlayAllScripts({ steps }: { steps: SupplyChainStep[] }) {
           )}
         </CardDescription>
       </CardHeader>
+    </Card>
+  );
+}
+
+// Video-like presentation component
+function VideoPresentation({ steps, images }: { steps: SupplyChainStep[]; images: GeneratedImage[] }) {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [stepStartTime, setStepStartTime] = useState<number>(0);
+  const previousSpeechStatusRef = React.useRef<string>('');
+
+  // Get steps that have both images and scripts
+  const presentationSteps = steps.filter(step => {
+    const hasImage = images.some(img => img.stepNumber === step.stepNumber && img.success);
+    return step.isDetailed && step.videoScript && hasImage;
+  });
+
+  // Current step speech hook
+  const currentStepData = presentationSteps[currentStep];
+  const {
+    speechStatus,
+    start: startSpeech,
+    pause: pauseSpeech,
+    stop: stopSpeech,
+  } = useSpeech({
+    text: currentStepData?.videoScript || '',
+    rate: 1,
+    pitch: 1,
+    volume: 1,
+    lang: 'en-US',
+  });
+
+  // Detect when speech finishes and advance to next step
+  React.useEffect(() => {
+    // Check if speech just finished (transitioned from any active state to inactive)
+    const speechJustFinished = (
+      (previousSpeechStatusRef.current === "started" || previousSpeechStatusRef.current === "paused") && 
+      (speechStatus !== "started" && speechStatus !== "paused")
+    );
+
+    if (speechJustFinished && isPlaying && !isPaused) {
+      console.log(`Speech finished for step ${currentStep + 1}, status changed from ${previousSpeechStatusRef.current} to ${speechStatus}`);
+      
+      // Add a small delay to ensure speech has fully completed
+      setTimeout(() => {
+        if (currentStep < presentationSteps.length - 1) {
+          console.log(`Advancing to step ${currentStep + 2}`);
+          setCurrentStep(prev => prev + 1);
+        } else {
+          console.log('Presentation finished - reached last step');
+          setIsPlaying(false);
+          setCurrentStep(0);
+        }
+      }, 1000); // 1 second delay to ensure clean transition
+    }
+
+    // Update the ref with current status
+    previousSpeechStatusRef.current = speechStatus;
+  }, [speechStatus, currentStep, presentationSteps.length, isPlaying, isPaused]);
+
+  // Auto-start speech when step changes during playback
+  React.useEffect(() => {
+    if (isPlaying && !isPaused && speechStatus !== "started" && currentStepData) {
+      console.log(`Starting speech for step ${currentStep + 1}`);
+      setStepStartTime(Date.now());
+      const timer = setTimeout(() => startSpeech(), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStep, isPlaying, isPaused, currentStepData, speechStatus, startSpeech]);
+
+  // Get current image
+  const currentImage = currentStepData ? 
+    images.find(img => img.stepNumber === currentStepData.stepNumber) : null;
+
+  const startPresentation = () => {
+    console.log('Starting presentation');
+    setIsPlaying(true);
+    setIsPaused(false);
+    setCurrentStep(0);
+    previousSpeechStatusRef.current = '';
+    setStepStartTime(Date.now());
+    // Start speech for first step
+    setTimeout(() => startSpeech(), 100);
+  };
+
+  const pausePresentation = () => {
+    console.log('Pausing presentation');
+    setIsPaused(true);
+    pauseSpeech();
+  };
+
+  const resumePresentation = () => {
+    console.log('Resuming presentation');
+    setIsPaused(false);
+    startSpeech();
+  };
+
+  const stopPresentation = () => {
+    console.log('Stopping presentation');
+    setIsPlaying(false);
+    setIsPaused(false);
+    setCurrentStep(0);
+    stopSpeech();
+    previousSpeechStatusRef.current = '';
+  };
+
+  const goToStep = (stepIndex: number) => {
+    console.log(`Going to step ${stepIndex + 1}`);
+    setCurrentStep(stepIndex);
+    stopSpeech();
+    previousSpeechStatusRef.current = '';
+    setStepStartTime(Date.now());
+    if (isPlaying && !isPaused) {
+      setTimeout(() => startSpeech(), 100);
+    }
+  };
+
+  if (presentationSteps.length === 0) {
+    return (
+      <Card className="mb-6">
+        <CardContent className="py-8 text-center">
+          <div className="text-gray-500">
+            <h3 className="text-lg font-semibold mb-2">📹 Video Presentation Not Ready</h3>
+            <p>Generate both images and step details to create a video-like presentation.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const progress = ((currentStep + 1) / presentationSteps.length) * 100;
+  const currentDuration = stepStartTime > 0 ? Math.floor((Date.now() - stepStartTime) / 1000) : 0;
+
+  return (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          📹 Video Presentation
+          <div className="flex gap-2">
+            {!isPlaying ? (
+              <Button 
+                onClick={startPresentation}
+                className="bg-red-600 hover:bg-red-700 text-white"
+                size="sm"
+              >
+                ▶️ Play Presentation
+              </Button>
+            ) : isPaused ? (
+              <Button 
+                onClick={resumePresentation}
+                className="bg-green-600 hover:bg-green-700 text-white"
+                size="sm"
+              >
+                ▶️ Resume
+              </Button>
+            ) : (
+              <Button 
+                onClick={pausePresentation}
+                variant="outline"
+                size="sm"
+              >
+                ⏸️ Pause
+              </Button>
+            )}
+            <Button 
+              onClick={stopPresentation}
+              variant="outline"
+              size="sm"
+              disabled={!isPlaying}
+            >
+              ⏹️ Stop
+            </Button>
+          </div>
+        </CardTitle>
+        <CardDescription>
+          Watch an interactive presentation with images and narration for each step
+        </CardDescription>
+      </CardHeader>
+      
+      <CardContent className="space-y-4">
+        {/* Progress Bar */}
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div 
+            className="bg-red-600 h-2 rounded-full transition-all duration-500"
+            style={{ width: `${progress}%` }}
+          ></div>
+        </div>
+        
+        {/* Step Counter */}
+        <div className="text-center text-sm text-gray-600">
+          Step {currentStep + 1} of {presentationSteps.length}
+        </div>
+
+        {/* Debug Info */}
+        <div className="text-xs text-gray-500 text-center">
+          Speech: {speechStatus} → {previousSpeechStatusRef.current} | Playing: {isPlaying.toString()} | Duration: {currentDuration}s
+        </div>
+
+        {/* Main Presentation Area */}
+        <div className="relative bg-black rounded-lg overflow-hidden" style={{ aspectRatio: '16/9' }}>
+          {currentImage && (
+            <div className="w-full h-full flex items-center justify-center">
+              {(() => {
+                const dataObj = (currentImage.imageData && typeof currentImage.imageData === 'object')
+                  ? (currentImage.imageData as { image?: string | null; mimeType?: string; text?: string })
+                  : null;
+                const imgSrc = dataObj?.image
+                  ? `data:${dataObj.mimeType || 'image/png'};base64,${dataObj.image}`
+                  : null;
+                
+                if (imgSrc) {
+                  return (
+                    <img
+                      src={imgSrc}
+                      alt={`Step ${currentStepData.stepNumber}: ${currentStepData.title}`}
+                      className="w-full h-full object-cover"
+                    />
+                  );
+                } else {
+                  return (
+                    <div className="w-full h-full flex items-center justify-center text-white bg-gray-800">
+                      <div className="text-center">
+                        <h3 className="text-xl font-semibold mb-2">{currentStepData.stage}</h3>
+                        <p className="text-gray-300">{currentStepData.title}</p>
+                      </div>
+                    </div>
+                  );
+                }
+              })()}
+            </div>
+          )}
+          
+          {/* Video-like Controls Overlay */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+            <div className="text-white">
+              <h3 className="font-semibold">{currentStepData?.stage}</h3>
+              <p className="text-sm text-gray-300">{currentStepData?.title}</p>
+            </div>
+          </div>
+
+          {/* Speaking Indicator */}
+          {speechStatus === "started" && (
+            <div className="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs flex items-center gap-2">
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+              LIVE
+            </div>
+          )}
+
+          {/* Paused Indicator */}
+          {isPaused && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+              <div className="bg-white/90 rounded-full p-4">
+                <div className="text-black text-4xl">⏸️</div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Step Navigation */}
+        <div className="flex flex-wrap gap-2 justify-center">
+          {presentationSteps.map((step, index) => (
+            <Button
+              key={step.stepNumber}
+              onClick={() => goToStep(index)}
+              variant={index === currentStep ? "default" : "outline"}
+              size="sm"
+              className={`text-xs ${index === currentStep ? 'bg-red-600 hover:bg-red-700' : ''}`}
+            >
+              {step.stepNumber}
+            </Button>
+          ))}
+        </div>
+
+        {/* Current Step Info */}
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h4 className="font-semibold mb-2">Current Step: {currentStepData?.stage}</h4>
+          <p className="text-sm text-gray-700 mb-2">{currentStepData?.description}</p>
+          <div className="text-xs text-gray-600 italic">
+            &ldquo;{currentStepData?.videoScript}&rdquo;
+          </div>
+        </div>
+      </CardContent>
     </Card>
   );
 }
@@ -595,6 +879,8 @@ export default function Home() {
             </Card>
 
             <PlayAllScripts steps={supplyChain.supplyChainSteps} />
+
+            <VideoPresentation steps={supplyChain.supplyChainSteps} images={generatedImages} />
 
             <div className="grid gap-6">
               {supplyChain.supplyChainSteps.map((step, index) => (
