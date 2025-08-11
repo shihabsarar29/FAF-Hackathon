@@ -98,6 +98,7 @@ export default function VideoPresentation({ items, images, audioData, contentTyp
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const previousAudioStatusRef = React.useRef<string>('idle');
   const currentAudioStatusRef = React.useRef<string>('idle');
+  const lastAdvanceTimeRef = React.useRef<number>(0);
 
   // Helper function to get the ID from any item type
   const getItemId = (item: SupplyChainStep | EnvironmentalEffect | HealthEffect | HistoryOrigin | undefined): number => {
@@ -131,12 +132,12 @@ export default function VideoPresentation({ items, images, audioData, contentTyp
     let cumulativeTime = 0;
     
     presentationItems.forEach((item, index) => {
+      if (index > 0) {
+        times.push(cumulativeTime);
+      }
       // Use actual duration if available, otherwise estimate 5 seconds
       const stepDuration = stepDurations[getItemId(item)] || 5;
       cumulativeTime += stepDuration;
-      if (index < presentationItems.length - 1) {
-        times.push(cumulativeTime);
-      }
     });
     
     return { stepStartTimes: times, totalTime: cumulativeTime };
@@ -223,7 +224,7 @@ export default function VideoPresentation({ items, images, audioData, contentTyp
       };
       
       const handleEnded = () => {
-        console.log(`[AUDIO] Audio ended for step ${getItemId(currentStepData)}`);
+        console.log(`[AUDIO] Audio ended for step ${getItemId(currentStepData)} - triggering advancement`);
         setAudioStatus('ended');
         currentAudioStatusRef.current = 'ended';
         // Clean up blob URL to prevent memory leaks
@@ -236,7 +237,7 @@ export default function VideoPresentation({ items, images, audioData, contentTyp
           const timeLeft = audio.duration - audio.currentTime;
           
           // Update absolute time within current step only, but ensure it never goes backward
-          const stepStartTime = stepStartTimes[getItemId(currentStepData)] || 0;
+          const stepStartTime = stepStartTimes[currentStep] || 0;
           const absoluteTime = stepStartTime + audio.currentTime;
           
           // Only update if the new time is greater than current time (prevents backward jumps)
@@ -307,40 +308,43 @@ export default function VideoPresentation({ items, images, audioData, contentTyp
     
     console.log(`[AUTO-ADVANCE] Audio status: ${prevStatus} → ${currStatus} | Step: ${currentStep + 1}/${presentationItems.length} | Playing: ${isPlaying} | Paused: ${isPaused}`);
     
-    const audioJustFinished = (
-      (prevStatus === "playing" && currStatus === "ended") ||
-      (prevStatus === "paused" && currStatus === "ended") ||
-      (currStatus === "ended" && (prevStatus === "playing" || prevStatus === "paused"))
-    );
+    // Check if audio just finished (more permissive detection)
+    const audioJustFinished = currStatus === "ended" && prevStatus !== "ended";
 
-    if (audioJustFinished) {
+    if (audioJustFinished && isPlaying && !isPaused) {
       console.log(`[AUTO-ADVANCE] Audio finished detected for step ${currentStep + 1} (${prevStatus} → ${currStatus})`);
       
-      if (isPlaying && !isPaused) {
-        console.log(`[AUTO-ADVANCE] Conditions met, advancing...`);
+      const now = Date.now();
+      const timeSinceLastAdvance = now - lastAdvanceTimeRef.current;
+      
+      // More lenient debounce (200ms) and better conditions
+      if (timeSinceLastAdvance > 200) {
+        console.log(`[AUTO-ADVANCE] Conditions met, advancing... (${timeSinceLastAdvance}ms since last advance)`);
+        lastAdvanceTimeRef.current = now;
         
-        // Use a shorter timeout for more responsive advancement
+        // Use setTimeout to prevent state update conflicts
         setTimeout(() => {
           setCurrentStep(prevStep => {
-            const nextStep = prevStep + 1;
             if (prevStep < presentationItems.length - 1) {
-              console.log(`[AUTO-ADVANCE] Advancing from step ${prevStep + 1} to step ${nextStep + 1}`);
-              return nextStep;
+              console.log(`[AUTO-ADVANCE] Advancing from step ${prevStep + 1} to step ${prevStep + 2}`);
+              return prevStep + 1;
             } else {
               console.log('[AUTO-ADVANCE] Presentation finished - reached last step');
               setIsPlaying(false);
               return 0;
             }
           });
-        }, 200); // Reduced timeout for faster response
+        }, 100);
       } else {
-        console.log(`[AUTO-ADVANCE] Not advancing - isPlaying: ${isPlaying}, isPaused: ${isPaused}`);
+        console.log(`[AUTO-ADVANCE] Debounce block - timeSinceLastAdvance: ${timeSinceLastAdvance}ms`);
       }
+    } else if (audioJustFinished) {
+      console.log(`[AUTO-ADVANCE] Audio finished but not advancing - isPlaying: ${isPlaying}, isPaused: ${isPaused}`);
     }
 
     // Always update the ref at the end
     previousAudioStatusRef.current = currStatus;
-  }, [audioStatus, presentationItems.length, isPlaying, isPaused]);
+  }, [audioStatus, presentationItems.length, isPlaying, isPaused, currentStep]);
 
   // Play audio when current step changes during presentation
   React.useEffect(() => {
@@ -348,13 +352,16 @@ export default function VideoPresentation({ items, images, audioData, contentTyp
     
     if (isPlaying && !isPaused && currentStepData) {
       console.log(`[STEP-CHANGE] Playing audio for step ${currentStep + 1}: "${currentStepData.videoScript?.substring(0, 50)}..."`);
-      // Reset audio status before playing new audio
+      // Reset audio status and refs before playing new audio
       setAudioStatus('idle');
       setAudioError(null);
+      previousAudioStatusRef.current = 'idle';
+      currentAudioStatusRef.current = 'idle';
+      
       // Small delay to ensure state is updated
       setTimeout(() => {
         playCurrentStepAudio();
-      }, 100);
+      }, 150);
     } else {
       console.log(`[STEP-CHANGE] Not playing audio - conditions not met`);
     }
@@ -380,6 +387,9 @@ export default function VideoPresentation({ items, images, audioData, contentTyp
     setAudioStatus('idle');
     setAudioError(null);
     setAbsoluteCurrentTime(0); // Reset absolute time
+    lastAdvanceTimeRef.current = 0; // Reset advance timer
+    previousAudioStatusRef.current = 'idle';
+    currentAudioStatusRef.current = 'idle';
     
     if (!isPaused) {
       setCurrentStep(0);
@@ -421,10 +431,14 @@ export default function VideoPresentation({ items, images, audioData, contentTyp
   };
 
   const handleStepClick = (stepIndex: number) => {
+    console.log(`[STEP-CLICK] Jumping to step ${stepIndex + 1}`);
     setCurrentStep(stepIndex);
     // Set absolute time to the start of the clicked step
     const stepStartTime = stepStartTimes[stepIndex] || 0;
     setAbsoluteCurrentTime(stepStartTime);
+    // Reset audio status to ensure clean playback
+    setAudioStatus('idle');
+    setAudioError(null);
     if (isPlaying && !isPaused) {
       // Will trigger audio playback via useEffect
     }
